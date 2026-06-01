@@ -23,30 +23,41 @@
     loading = false;
   });
 
-  async function claimListing(listing) {
-    if (!confirm(`Klaim ${listing.quantity_liters}L dari UMKM ini?`)) return;
-    actionLoading = true;
-    error = '';
+async function claimListing(listing) {
+  if (!confirm(`Terima permintaan pickup ${listing.quantity_liters}L dari UMKM ini?`)) return;
 
-    const { error: orderErr } = await createOrder({
-      listing_id: listing.id,
-      perusahaan_id: profile.id,
-      umkm_id: listing.umkm_id,
-      requested_liters: listing.quantity_liters,
-      pickup_date: null
-    });
+  actionLoading = true;
+  error = '';
 
-    if (orderErr) { error = orderErr.message; actionLoading = false; return; }
+  const pickupDate = listing.available_until
+    ? new Date(listing.available_until).toISOString().slice(0, 10)
+    : null;
 
-    await updateListing(listing.id, { status: 'claimed' });
+  const { error: orderErr } = await createOrder({
+    listing_id: listing.id,
+    perusahaan_id: profile.id,
+    umkm_id: listing.umkm_id,
+    requested_liters: listing.quantity_liters,
+    pickup_date: pickupDate,
+    notes: listing.description || null
+  });
+
+  if (orderErr) {
+    error = orderErr.message;
     actionLoading = false;
-    goto('/dashboard/perusahaan/orders');
+    return;
   }
+
+  await updateListing(listing.id, { status: 'claimed' });
+
+  actionLoading = false;
+  goto('/dashboard/perusahaan/orders');
+}
 </script>
 
 <div class="mx-auto max-w-5xl px-4 py-8">
   <a href="/dashboard/perusahaan" class="text-sm text-jelantah-600 hover:text-jelantah-700 mb-4 inline-block">← Kembali ke Dashboard</a>
-  <h1 class="text-xl font-bold text-stone-800 mb-6">Listing Minyak Tersedia</h1>
+  <h1 class="text-xl font-bold text-stone-800 mb-6">Permintaan Pickup Tersedia</h1>
 
   {#if error}
     <div class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
@@ -93,7 +104,7 @@
               <span></span>
             {/if}
             <button onclick={() => claimListing(listing)} class="btn-primary text-xs py-1.5 px-4" disabled={actionLoading}>
-              {actionLoading ? 'Memproses...' : 'Klaim'}
+              {actionLoading ? 'Memproses...' : 'Terima Pickup'}
             </button>
           </div>
         </div>
