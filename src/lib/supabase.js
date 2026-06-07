@@ -71,7 +71,6 @@ export async function getAvailableListings() {
       "*, profiles!oil_listings_umkm_id_fkey(full_name, umkm_name, phone, address)",
     )
     .eq("status", "available")
-    .gte("available_until", new Date().toISOString())
     .order("created_at", { ascending: false });
 }
 
