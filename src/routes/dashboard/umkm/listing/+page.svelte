@@ -2,7 +2,9 @@
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
   import { getProfile, createListing } from '$lib/supabase.js';
+  import { reverseGeocode } from '$lib/geocode.js';
   import { goto } from '$app/navigation';
+  import Map from '$lib/Map.svelte';
 
   let profile = $state(null);
   let loading = $state(true);
@@ -17,6 +19,35 @@
   let pickupDate = $state('');
   let negotiationNote = $state('');
   let selectedFileName = $state('');
+  let latitude = $state(null);
+  let longitude = $state(null);
+  let showMap = $state(false);
+  let geocoding = $state(false);
+  let lastGeocodedLat = $state(null);
+  let lastGeocodedLng = $state(null);
+
+  // Auto-fill address from map pin via reverse geocoding
+  // Only fires when lat/lng change to coordinates we haven't geocoded yet
+  $effect(() => {
+    const lat = latitude;
+    const lng = longitude;
+    if (lat == null || lng == null) return;
+    // Already geocoded for these exact coordinates — skip (prevents loop)
+    if (lat === lastGeocodedLat && lng === lastGeocodedLng) return;
+    // Debounce: cancel if user drags pin rapidly
+    const timer = setTimeout(async () => {
+      geocoding = true;
+      const result = await reverseGeocode(lat, lng);
+      if (result) {
+        pickupAddress = result.address;
+        if (!city) city = result.city;
+      }
+      lastGeocodedLat = lat;
+      lastGeocodedLng = lng;
+      geocoding = false;
+    }, 500);
+    return () => clearTimeout(timer);
+  });
 
   const conditionLabels = {
     minim_ampas: 'Minim Ampas',
@@ -53,7 +84,25 @@
     }
 
     profile = userProfile.data;
+
+    // Pre-fill address from profile if available
     pickupAddress = userProfile.data.address || '';
+
+    // Auto-detect city via browser geolocation (silent fallback if denied)
+    if (!city && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          latitude = pos.coords.latitude;
+          longitude = pos.coords.longitude;
+          // The $effect on latitude/longitude handles reverse geocoding
+        },
+        () => {
+          // Permission denied or unavailable — silent fallback
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+      );
+    }
+
     loading = false;
   });
 
@@ -112,6 +161,8 @@
       description: finalDescription,
       pickup_address: pickupAddress,
       city: city || null,
+      latitude: latitude,
+      longitude: longitude,
       available_until: new Date(`${pickupDate}T23:59:00`).toISOString()
     });
 
@@ -268,6 +319,49 @@
             rows="2"
             required
           ></textarea>
+        </div>
+
+        <!-- Map location picker -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-medium text-stone-700">Lokasi di Peta</label>
+            <button
+              type="button"
+              onclick={() => showMap = !showMap}
+              class="text-xs text-jelantah-600 hover:text-jelantah-700"
+            >
+              {showMap ? 'Sembunyikan peta' : 'Tandai di peta'}
+            </button>
+          </div>
+
+          {#if showMap}
+            <div class="mb-2">
+              <Map
+                pickerMode={true}
+                height="300px"
+                zoom={15}
+                bind:latitude
+                bind:longitude
+              />
+            </div>
+          {/if}
+
+          {#if geocoding}
+            <p class="text-xs text-jelantah-600 flex items-center gap-1">
+              <span>⏳ Mengambil alamat dari lokasi peta...</span>
+            </p>
+          {:else if latitude != null && longitude != null}
+            <p class="text-xs text-green-700 flex items-center gap-1">
+              <span>✅ Lokasi ditandai</span>
+              <span class="text-stone-400">
+                ({latitude.toFixed(5)}, {longitude.toFixed(5)})
+              </span>
+            </p>
+          {:else if !showMap}
+            <p class="text-xs text-stone-400">
+              Klik "Tandai di peta" untuk menentukan lokasi penjemputan.
+            </p>
+          {/if}
         </div>
 
         <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">

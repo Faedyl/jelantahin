@@ -3,12 +3,30 @@
   import { supabase } from '$lib/supabaseClient.js';
   import { getProfile, getOrdersAsPerusahaan, updateOrder, createTransaction } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
+  import Map from '$lib/Map.svelte';
 
   let profile = $state(null);
   let orders = $state([]);
   let loading = $state(true);
   let actionLoading = $state(false);
   let error = $state('');
+
+  let activeOrdersMap = $derived.by(() => {
+    const active = orders.filter(o => o.status !== 'cancelled' && o.status !== 'completed');
+    return active
+      .filter(o => o.oil_listings?.latitude != null && o.oil_listings?.longitude != null)
+      .map(o => ({
+        lat: Number(o.oil_listings.latitude),
+        lng: Number(o.oil_listings.longitude),
+        popup: `
+          <div>
+            <p style="font-weight:600;font-size:13px;margin:0;">${o.requested_liters}L Pickup</p>
+            <p style="font-size:11px;color:#78716c;margin:2px 0;">${o.oil_listings.pickup_address?.slice(0, 50) || ''}</p>
+            <p style="font-size:11px;color:#78716c;margin:2px 0;">Status: ${o.status}</p>
+          </div>
+        `
+      }));
+  });
 
   const trackingSteps = [
     { key: 'pending', label: 'Menunggu' },
@@ -182,6 +200,14 @@
       </a>
     </div>
   {:else}
+    <!-- Overview map for active pickups with coordinates -->
+    {#if activeOrdersMap.length > 0}
+      <div class="card p-2 mb-6">
+        <h2 class="text-sm font-semibold text-stone-800 mb-2 px-2">📍 Lokasi Pickup Aktif</h2>
+        <Map markers={activeOrdersMap} height="300px" zoom={11} />
+      </div>
+    {/if}
+
     <div class="space-y-4">
       {#each orders as order}
         <div class="card">
@@ -262,6 +288,21 @@
                 </p>
               {/if}
             </div>
+
+            <!-- Mini map for this order if it has coordinates -->
+            {#if order.oil_listings.latitude != null && order.oil_listings.longitude != null}
+              <div class="mb-3">
+                <Map
+                  markers={[{
+                    lat: Number(order.oil_listings.latitude),
+                    lng: Number(order.oil_listings.longitude),
+                    popup: `<p style="font-size:12px;margin:0;">📍 ${order.oil_listings.pickup_address?.slice(0, 40) || 'Lokasi pickup'}</p>`
+                  }]}
+                  height="180px"
+                  zoom={15}
+                />
+              </div>
+            {/if}
           {/if}
 
           <div class="flex flex-wrap gap-2">

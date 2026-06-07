@@ -3,12 +3,23 @@
   import { supabase } from '$lib/supabaseClient.js';
   import { getProfile, getMyListings, getOrdersAsUmkm } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
+  import Map from '$lib/Map.svelte';
 
   let profile = $state(null);
   let listings = $state([]);
   let orders = $state([]);
   let tab = $state('listings');
   let loading = $state(true);
+
+  let listingMarkers = $derived(
+    listings
+      .filter(l => l.latitude != null && l.longitude != null)
+      .map(l => ({
+        lat: Number(l.latitude),
+        lng: Number(l.longitude),
+        popup: `<p style="font-size:12px;margin:0;">${l.quantity_liters}L — Rp ${Number(l.price_per_liter).toLocaleString('id-ID')}/L</p><p style="font-size:11px;color:#78716c;margin:2px 0;">${l.city || l.pickup_address?.slice(0, 30) || ''} • ${l.status}</p>`
+      }))
+  );
 
   onMount(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -45,6 +56,13 @@
   {#if loading}
     <p class="text-stone-400 text-sm">Memuat...</p>
   {:else if tab === 'listings'}
+    <!-- Map of listings -->
+    {#if listingMarkers.length > 0}
+      <div class="card p-2 mb-4">
+        <Map markers={listingMarkers} height="280px" zoom={12} />
+      </div>
+    {/if}
+
     <div class="card">
       <div class="flex items-center justify-between mb-4">
         <h2 class="font-semibold text-stone-800">Semua Listing ({listings.length})</h2>
