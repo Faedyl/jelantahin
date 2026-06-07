@@ -3,34 +3,42 @@
 
   /**
    * Map component — two modes:
-   * 1. Display mode (default): shows markers with popups
-   * 2. Picker mode: click/drag to drop a pin, reports lat/lng via bind:latitude / bind:longitude
+   * 1. Display mode: shows markers with popups
+   * 2. Picker mode: click/drag to drop a pin
    */
   let {
-    // Display mode
-    markers = [], height = '400px', zoom = 12, center = null,
-    // Picker mode
-    pickerMode = false, latitude = $bindable(null), longitude = $bindable(null),
+    markers = [],
+    height = '400px',
+    zoom = 12,
+    center = null,
+
+    pickerMode = false,
+    latitude = $bindable(null),
+    longitude = $bindable(null)
   } = $props();
 
-  let mapEl = $state(null);
-  let map = $state(null);
-  let markerGroup = $state(null);
-  let pickerMarker = $state(null);
+  let mapEl;
+
+  // Jangan pakai $state untuk object Leaflet agar tidak memicu infinite update
+  let L;
+  let map;
+  let markerGroup;
+  let pickerMarker;
 
   const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const attribution = '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  const attribution =
+    '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
   onMount(async () => {
-    const L = (await import('leaflet')).default;
+    L = (await import('leaflet')).default;
     await import('leaflet/dist/leaflet.css');
 
-    // Fix default marker icon path issue (webpack/vite bundling)
+    // Fix default marker icon path issue
     delete L.Icon.Default.prototype._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
     });
 
     if (!mapEl) return;
@@ -42,31 +50,29 @@
     map = L.map(mapEl, {
       center: defaultCenter,
       zoom: defaultZoom,
-      scrollWheelZoom: true,
+      scrollWheelZoom: true
     });
 
     L.tileLayer(tileUrl, { attribution }).addTo(map);
 
-    // ─── Picker Mode ───────────────────────────────────────
     if (pickerMode) {
       map.on('click', (e) => {
         setPin(e.latlng.lat, e.latlng.lng);
       });
 
-      // If initial coords provided, show marker
       if (hasInitialCoords) {
         placePickerMarker(latitude, longitude);
       }
-    }
-
-    // ─── Display Mode ──────────────────────────────────────
-    if (!pickerMode && markers.length > 0) {
+    } else if (markers.length > 0) {
       renderMarkers(markers);
     }
   });
 
   onDestroy(() => {
-    map?.remove();
+    if (map) {
+      map.remove();
+      map = null;
+    }
   });
 
   function setPin(lat, lng) {
@@ -76,12 +82,14 @@
   }
 
   function placePickerMarker(lat, lng) {
-    const L = window.L;
     if (!map || !L) return;
 
-    if (pickerMarker) map.removeLayer(pickerMarker);
+    if (pickerMarker) {
+      map.removeLayer(pickerMarker);
+    }
 
     pickerMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
     pickerMarker.on('dragend', () => {
       const pos = pickerMarker.getLatLng();
       latitude = pos.lat;
@@ -90,59 +98,80 @@
   }
 
   function renderMarkers(items) {
-    const L = window.L;
     if (!map || !L) return;
 
-    if (markerGroup) map.removeLayer(markerGroup);
+    if (markerGroup) {
+      map.removeLayer(markerGroup);
+      markerGroup = null;
+    }
+
+    if (!items || items.length === 0) return;
 
     markerGroup = L.featureGroup().addTo(map);
+
     items.forEach((m) => {
       const marker = L.marker([m.lat, m.lng]);
-      if (m.popup) marker.bindPopup(m.popup);
+
+      if (m.popup) {
+        marker.bindPopup(m.popup);
+      }
+
       marker.addTo(markerGroup);
     });
 
     if (items.length > 1) {
       map.fitBounds(markerGroup.getBounds().pad(0.1));
+    } else if (items.length === 1) {
+      map.setView([items[0].lat, items[0].lng], zoom);
     }
   }
 
-  // Re-render markers when the array changes (display mode)
+  // Re-render markers kalau data markers berubah
   $effect(() => {
-    if (!map || pickerMode) return;
     const items = markers;
-    if (items.length > 0) {
-      renderMarkers(items);
-    }
+
+    if (pickerMode) return;
+    if (!map || !L) return;
+
+    renderMarkers(items);
   });
 </script>
 
 <div class="map-wrapper" style="height: {height};">
   {#if pickerMode}
-    <div class="text-xs text-stone-500 mb-1">
+    <div class="mb-1 text-xs text-stone-500">
       Klik peta untuk menandai lokasi penjemputan
       {#if latitude != null}
         — ✅ Lokasi ditandai
       {/if}
     </div>
   {/if}
-  <div bind:this={mapEl} class="map-container rounded-xl border border-stone-200" style="height: 100%;"></div>
+
+  <div
+    bind:this={mapEl}
+    class="map-container rounded-xl border border-stone-200"
+    style="height: 100%;"
+  ></div>
 </div>
 
 <style>
   .map-wrapper {
     width: 100%;
   }
+
   .map-container {
     z-index: 1;
   }
+
   :global(.leaflet-popup-content) {
     font-size: 13px;
     line-height: 1.4;
   }
+
   :global(.leaflet-popup-content-wrapper) {
     border-radius: 10px;
   }
+
   :global(.leaflet-container) {
     font-family: inherit;
   }
