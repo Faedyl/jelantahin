@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getMyListings, getOrdersAsUmkm } from '$lib/supabase.js';
+  import { getProfile, getMyListings, getOrdersAsUmkm, getPaymentsForUmkm } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
 
@@ -11,6 +11,8 @@
   let tab = $state('listings');
   let loading = $state(true);
 
+  let incomingPayments = $state([]);
+  let totalReceived = $state(0);
   let showRewardModal = $state(false);
   let rewardMessage = $state('');
 
@@ -96,13 +98,18 @@
 
     profile = userProfile.data;
 
-    const [listingsRes, ordersRes] = await Promise.all([
+    const [listingsRes, ordersRes, paymentsRes] = await Promise.all([
       getMyListings(session.user.id),
-      getOrdersAsUmkm(session.user.id)
+      getOrdersAsUmkm(session.user.id),
+      getPaymentsForUmkm(session.user.id),
     ]);
 
     listings = listingsRes.data || [];
     orders = ordersRes.data || [];
+    incomingPayments = paymentsRes.data || [];
+    totalReceived = incomingPayments
+      .filter(p => p.status === 'confirmed' || p.status === 'paid')
+      .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
     loading = false;
   });
 
@@ -217,28 +224,17 @@
   </a>
 
   <div class="relative z-20 mb-6 flex gap-2">
-    <button
-      type="button"
-      onclick={() => setTab('listings')}
-      class={`rounded-lg px-4 py-2 text-sm ${
-        tab === 'listings'
-          ? 'bg-jelantah-100 font-semibold text-jelantah-700'
-          : 'text-stone-500 hover:bg-stone-100'
-      }`}
-    >
-      Listing
+    <button onclick={() => setTab('listings')}
+      class={`rounded-lg px-4 py-2 text-sm ${tab === 'listings' ? 'bg-jelantah-100 font-semibold text-jelantah-700' : 'text-stone-500 hover:bg-stone-100'}`}>
+      📋 Listing
     </button>
-
-    <button
-      type="button"
-      onclick={() => setTab('orders')}
-      class={`rounded-lg px-4 py-2 text-sm ${
-        tab === 'orders'
-          ? 'bg-jelantah-100 font-semibold text-jelantah-700'
-          : 'text-stone-500 hover:bg-stone-100'
-      }`}
-    >
-      Pesanan
+    <button onclick={() => setTab('orders')}
+      class={`rounded-lg px-4 py-2 text-sm ${tab === 'orders' ? 'bg-jelantah-100 font-semibold text-jelantah-700' : 'text-stone-500 hover:bg-stone-100'}`}>
+      📦 Pesanan
+    </button>
+    <button onclick={() => setTab('payments')}
+      class={`rounded-lg px-4 py-2 text-sm ${tab === 'payments' ? 'bg-jelantah-100 font-semibold text-jelantah-700' : 'text-stone-500 hover:bg-stone-100'}`}>
+      💰 Pembayaran Masuk
     </button>
   </div>
 
@@ -286,7 +282,7 @@
         </div>
       {/if}
     </div>
-  {:else}
+  {:else if tab === 'orders'}
     <div class="card">
       <h2 class="mb-4 font-semibold text-stone-800">Riwayat Pesanan ({orders.length})</h2>
 
@@ -363,6 +359,45 @@
                   Pickup ini telah dibatalkan.
                 </div>
               {/if}
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {:else if tab === 'payments'}
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-stone-800">💰 Pembayaran Masuk</h2>
+        <div class="text-right">
+          <p class="text-xs text-stone-500">Total Diterima</p>
+          <p class="text-lg font-bold text-green-600">{formatRupiah(totalReceived)}</p>
+        </div>
+      </div>
+
+      {#if incomingPayments.length === 0}
+        <p class="text-sm text-stone-400 text-center py-8">Belum ada pembayaran masuk.</p>
+      {:else}
+        <div class="space-y-3">
+          {#each incomingPayments as p}
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3 last:border-0 last:pb-0">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span>🏦</span>
+                  <p class="text-sm font-medium text-stone-800">
+                    Pembayaran via {p.payment_banks?.bank_name || 'Bank'}
+                  </p>
+                </div>
+                <p class="text-xs text-stone-500 mt-1">
+                  {p.sender_name || 'Perusahaan'} • {new Date(p.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })}
+                </p>
+                {#if p.notes}
+                  <p class="text-xs text-stone-400 mt-0.5">{p.notes}</p>
+                {/if}
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-bold text-green-600">{formatRupiah(p.amount)}</p>
+                <span class="{statusBadge(p.status)} text-xs mt-1 inline-block">{p.status}</span>
+              </div>
             </div>
           {/each}
         </div>

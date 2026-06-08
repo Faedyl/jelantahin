@@ -348,3 +348,40 @@ export async function updatePaymentConfirmation(id, updates) {
     .select()
     .single();
 }
+
+// ─── Order-based Payments (Perusahaan → UMKM) ────────────────
+
+export async function getPaymentConfirmationsForOrder(orderId) {
+  return supabase
+    .from("payment_confirmations")
+    .select("*, payment_banks(*)")
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: false });
+}
+
+export async function getPaymentsForUmkm(userId) {
+  // Payments received by this UMKM (via orders where they're the UMKM)
+  return supabase
+    .from("payment_confirmations")
+    .select("*, payment_banks(*), orders!inner(umkm_id, perusahaan_id, requested_liters, status, created_at)")
+    .eq("orders.umkm_id", userId)
+    .order("created_at", { ascending: false });
+}
+
+export async function confirmOrderPayment({ orderId, userId, bankId, amount, senderName }) {
+  return supabase
+    .from("payment_confirmations")
+    .insert([{
+      order_id: orderId,
+      transaction_id: null,
+      user_id: userId,
+      bank_id: bankId || null,
+      amount: amount,
+      transfer_date: new Date().toISOString().split('T')[0],
+      sender_name: senderName || null,
+      sender_bank: null,
+      notes: `Pembayaran untuk pesanan #${orderId.slice(0, 8)}`,
+    }])
+    .select()
+    .single();
+}

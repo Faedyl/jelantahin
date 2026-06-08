@@ -140,7 +140,14 @@
     </div>
 
     <!-- Quick Links -->
-    <div class="mt-6 grid gap-4 sm:grid-cols-3">
+    <div class="mt-6 grid gap-4 sm:grid-cols-4">
+      <a href="/dashboard/umkm/bank" class="card flex items-center gap-3 hover:shadow-md transition-shadow">
+        <span class="text-2xl">🏦</span>
+        <div>
+          <p class="font-semibold text-stone-800 text-sm">Rekening Bank</p>
+          <p class="text-xs text-stone-500">Setel rekening penerimaan</p>
+        </div>
+      </a>
       <a href="/dashboard/umkm/points" class="card flex items-center gap-3 hover:shadow-md transition-shadow">
         <span class="text-2xl">🏆</span>
         <div>
@@ -148,18 +155,18 @@
           <p class="text-xs text-stone-500">Tukar poin jadi hadiah</p>
         </div>
       </a>
-      <a href="/dashboard/payment" class="card flex items-center gap-3 hover:shadow-md transition-shadow">
-        <span class="text-2xl">💳</span>
-        <div>
-          <p class="font-semibold text-stone-800 text-sm">Konfirmasi Bayar</p>
-          <p class="text-xs text-stone-500">Upload bukti transfer</p>
-        </div>
-      </a>
       <a href="/dashboard/umkm/history" class="card flex items-center gap-3 hover:shadow-md transition-shadow">
         <span class="text-2xl">📋</span>
         <div>
           <p class="font-semibold text-stone-800 text-sm">Riwayat</p>
           <p class="text-xs text-stone-500">Semua listing & pesanan</p>
+        </div>
+      </a>
+      <a href="/dashboard/payment" class="card flex items-center gap-3 hover:shadow-md transition-shadow">
+        <span class="text-2xl">💳</span>
+        <div>
+          <p class="font-semibold text-stone-800 text-sm">Pembayaran</p>
+          <p class="text-xs text-stone-500">Konfirmasi & riwayat</p>
         </div>
       </a>
     </div>

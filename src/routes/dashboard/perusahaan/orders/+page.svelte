@@ -315,6 +315,15 @@
                 {actionLoading ? 'Memproses...' : action.label}
               </button>
             {/each}
+
+            {#if order.status === 'completed'}
+              <a
+                href="/dashboard/payment?order_id={order.id}"
+                class="btn-primary px-3 py-1.5 text-xs inline-flex items-center gap-1"
+              >
+                💳 Bayar UMKM
+              </a>
+            {/if}
           </div>
         </div>
       {/each}

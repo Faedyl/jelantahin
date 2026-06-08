@@ -147,9 +147,9 @@
           <h2 class="font-semibold text-stone-800 mb-4">Aksi Cepat</h2>
           <div class="space-y-3">
             <a href="/dashboard/umkm/listing" class="btn-primary w-full justify-center">+ Ajukan Pickup Baru</a>
+            <a href="/dashboard/umkm/bank" class="btn-secondary w-full justify-center">🏦 Rekening Penerimaan</a>
             <a href="/dashboard/umkm/points" class="btn-secondary w-full justify-center">🏆 Tukar Poin</a>
-            <a href="/dashboard/payment" class="btn-secondary w-full justify-center">💳 Konfirmasi Pembayaran</a>
-            <a href="/dashboard/umkm" class="btn-secondary w-full justify-center">Dashboard Lengkap</a>
+            <a href="/dashboard/umkm/history" class="btn-secondary w-full justify-center">📋 Riwayat & Pembayaran</a>
           </div>
         </div>
 
@@ -227,8 +227,8 @@
           <h2 class="font-semibold text-stone-800 mb-4">Aksi Cepat</h2>
           <div class="space-y-3">
             <a href="/dashboard/perusahaan/browse" class="btn-primary w-full justify-center">🔍 Cari Listing Minyak</a>
-            <a href="/dashboard/perusahaan/orders" class="btn-secondary w-full justify-center">Pesanan Saya</a>
-            <a href="/dashboard/perusahaan/banks" class="btn-secondary w-full justify-center">🏦 Kelola Bank</a>
+            <a href="/dashboard/perusahaan/orders" class="btn-secondary w-full justify-center">📋 Pesanan Saya</a>
+            <a href="/dashboard/payment" class="btn-secondary w-full justify-center">💳 Pembayaran</a>
             <a href="/dashboard/perusahaan" class="btn-secondary w-full justify-center">Dashboard Lengkap</a>
           </div>
         </div>
