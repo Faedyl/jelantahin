@@ -33,6 +33,7 @@
   let transferDate = $state(new Date().toISOString().split('T')[0]);
   let senderName = $state('');
   let senderBank = $state('');
+  let proofImageUrl = $state('');
   let notes = $state('');
   let submitting = $state(false);
   let formError = $state('');
