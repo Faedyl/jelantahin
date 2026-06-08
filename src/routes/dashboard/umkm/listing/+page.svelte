@@ -192,10 +192,10 @@
     </a>
 
     <div class="card overflow-hidden">
-      <div class="mb-6 rounded-2xl bg-gradient-to-br from-green-50 to-yellow-50 p-5">
-        <p class="text-sm font-semibold text-jelantah-600">Jelantahin</p>
-        <h1 class="mt-1 text-2xl font-bold text-stone-800">Ajukan Pickup Jelantah</h1>
-        <p class="mt-1 text-sm text-stone-600">Jelantahmu, cuanmu.</p>
+      <div class="mb-6 rounded-2xl bg-gradient-to-br from-jelantah-600 to-jelantah-800 p-5">
+        <p class="text-sm font-semibold text-jelantah-200">Jelantahin</p>
+        <h1 class="mt-1 text-2xl font-bold text-white">Ajukan Pickup Jelantah</h1>
+        <p class="mt-1 text-sm text-jelantah-200">Jelantahmu, cuanmu.</p>
       </div>
 
       {#if error}
