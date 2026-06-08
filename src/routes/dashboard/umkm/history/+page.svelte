@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getMyListings, getOrdersAsUmkm, getPaymentsForUmkm } from '$lib/supabase.js';
+  import { getProfile, getMyListings, getOrdersAsUmkm, getPaymentsForUmkm, getPointsBalance, ensurePointsAccount } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
 
@@ -11,6 +11,7 @@
   let tab = $state('listings');
   let loading = $state(true);
 
+  let pointsBalance = $state(0);
   let incomingPayments = $state([]);
   let totalReceived = $state(0);
   let showRewardModal = $state(false);
@@ -98,10 +99,12 @@
 
     profile = userProfile.data;
 
-    const [listingsRes, ordersRes, paymentsRes] = await Promise.all([
+    await ensurePointsAccount(session.user.id);
+    const [listingsRes, ordersRes, paymentsRes, pointsRes] = await Promise.all([
       getMyListings(session.user.id),
       getOrdersAsUmkm(session.user.id),
       getPaymentsForUmkm(session.user.id),
+      getPointsBalance(session.user.id),
     ]);
 
     listings = listingsRes.data || [];
@@ -110,6 +113,7 @@
     totalReceived = incomingPayments
       .filter(p => p.status === 'confirmed' || p.status === 'paid')
       .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+    pointsBalance = pointsRes.data?.balance || 0;
     loading = false;
   });
 
@@ -165,7 +169,7 @@
   }
 
   function redeemReward(reward) {
-    if (rewardPoints < reward.points) {
+    if (pointsBalance < reward.points) {
       rewardMessage = `Poin belum cukup untuk menukar ${reward.title}. Dibutuhkan ${reward.points} poin.`;
       return;
     }
@@ -199,7 +203,7 @@
 
     <a href="/dashboard/umkm/points" class="card block hover:shadow-md transition-shadow">
       <p class="text-xs text-stone-500">🏆 Kupon Poin</p>
-      <p class="mt-1 text-2xl font-bold text-yellow-600">{rewardPoints} poin</p>
+      <p class="mt-1 text-2xl font-bold text-yellow-600">{pointsBalance.toLocaleString('id-ID')} poin</p>
       <p class="mt-1 text-xs text-stone-400">1 liter = 10 poin • Klik untuk tukar →</p>
     </a>
   </div>
@@ -415,7 +419,7 @@
           <h2 class="text-xl font-bold text-stone-800">Tukar Poin Reward</h2>
           <p class="mt-1 text-sm text-stone-500">
             Kamu memiliki
-            <span class="font-semibold text-yellow-600">{rewardPoints} poin</span>.
+            <span class="font-semibold text-yellow-600">{pointsBalance.toLocaleString('id-ID')} poin</span>.
           </p>
         </div>
 
@@ -473,12 +477,12 @@
                 type="button"
                 onclick={() => redeemReward(reward)}
                 class={`rounded-lg px-4 py-2 text-xs font-semibold ${
-                  rewardPoints >= reward.points
+                  pointsBalance >= reward.points
                     ? 'bg-jelantah-600 text-white hover:bg-jelantah-700'
                     : 'bg-stone-100 text-stone-400'
                 }`}
               >
-                {rewardPoints >= reward.points ? 'Tukar' : 'Poin Kurang'}
+                {pointsBalance >= reward.points ? 'Tukar' : 'Poin Kurang'}
               </button>
             </div>
           </div>

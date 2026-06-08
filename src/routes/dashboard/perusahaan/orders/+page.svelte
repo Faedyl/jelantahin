@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getOrdersAsPerusahaan, updateOrder, createTransaction } from '$lib/supabase.js';
+  import { getProfile, getOrdersAsPerusahaan, updateOrder, createTransaction, earnPoints, ensurePointsAccount } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
 
@@ -101,6 +101,19 @@
 
       if (txErr) {
         error = txErr.message;
+      }
+
+      // 🏆 Auto-earn points for UMKM: 1 liter = 10 poin
+      if (!txErr) {
+        const points = Math.floor(actualLiters * 10);
+        await ensurePointsAccount(order.umkm_id);
+        await earnPoints({
+          userId: order.umkm_id,
+          transactionId: null,
+          points,
+          source: 'transaction',
+          description: `${actualLiters}L minyak jelantah — 1L = 10 poin`,
+        });
       }
     }
 

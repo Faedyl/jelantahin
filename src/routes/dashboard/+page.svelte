@@ -134,10 +134,11 @@
           <p class="text-xs text-stone-500 uppercase tracking-wide">Estimasi Pendapatan</p>
           <p class="text-2xl font-bold text-green-600 mt-1">{formatRupiah(umkmStats.earnings)}</p>
         </div>
-        <div class="stat-card">
+        <a href="/dashboard/umkm/points" class="stat-card block hover:shadow-md transition-shadow">
           <p class="text-xs text-stone-500 uppercase tracking-wide">🏆 Kupon Poin</p>
           <p class="text-2xl font-bold text-jelantah-600 mt-1">{umkmStats.points.toLocaleString('id-ID')}</p>
-        </div>
+          <p class="text-xs text-jelantah-500 mt-0.5">1L = 10 poin • Tukar →</p>
+        </a>
       </div>
 
       <!-- Quick actions + content grid -->
