@@ -378,6 +378,7 @@ export async function confirmOrderPayment({ orderId, userId, bankId, amount, sen
       bank_id: bankId || null,
       amount: amount,
       admin_fee: adminFee || 0,
+      status: 'confirmed',
       transfer_date: new Date().toISOString().split('T')[0],
       sender_name: senderName || null,
       sender_bank: null,
