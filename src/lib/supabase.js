@@ -360,11 +360,22 @@ export async function getPaymentConfirmationsForOrder(orderId) {
 }
 
 export async function getPaymentsForUmkm(userId) {
-  // Payments received by this UMKM (via orders where they're the UMKM)
+  // Payments received by this UMKM — get their order IDs first,
+  // then fetch payment_confirmations for those orders.
+  // (Avoids Supabase FK join issues when FK was added in a later migration)
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("umkm_id", userId);
+
+  if (!orders || orders.length === 0) return { data: [] };
+
+  const orderIds = orders.map(o => o.id);
+
   return supabase
     .from("payment_confirmations")
-    .select("*, payment_banks(*), orders!inner(umkm_id, perusahaan_id, requested_liters, status, created_at)")
-    .eq("orders.umkm_id", userId)
+    .select("*, payment_banks(*)")
+    .in("order_id", orderIds)
     .order("created_at", { ascending: false });
 }
 

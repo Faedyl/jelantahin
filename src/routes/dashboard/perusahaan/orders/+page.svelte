@@ -106,8 +106,7 @@
       // 🏆 Auto-earn points for UMKM: 1 liter = 10 poin
       if (!txErr) {
         const points = Math.floor(actualLiters * 10);
-        // Use server endpoint (bypasses RLS via service_role)
-        await fetch('/api/points/earn', {
+        const ptsRes = await fetch('/api/points/earn', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -117,6 +116,10 @@
             description: `${actualLiters}L minyak jelantah — 1L = 10 poin`,
           }),
         });
+        const ptsData = await ptsRes.json();
+        if (!ptsRes.ok) {
+          console.error('[Points] Gagal earn:', ptsData.error);
+        }
       }
     }
 
