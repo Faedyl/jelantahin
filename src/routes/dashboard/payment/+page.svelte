@@ -119,13 +119,16 @@
   });
 
   // ── Bayar untuk order ──
+  let fixedAmount = $derived(
+    order ? parseFloat(order.requested_liters || 0) * parseFloat(order.oil_listings?.price_per_liter || 0) : 0
+  );
+
   async function handleOrderPayment() {
     bankError = '';
     bankSuccess = '';
 
-    if (!selectedBank) { bankError = 'Pilih bank tujuan.'; return; }
-    if (!bankAmount || parseFloat(bankAmount) <= 0) { bankError = 'Masukkan jumlah.'; return; }
     if (!bankSenderName.trim()) { bankError = 'Masukkan nama pengirim.'; return; }
+    if (fixedAmount <= 0) { bankError = 'Jumlah pembayaran tidak valid.'; return; }
 
     bankSubmitting = true;
     const { data: { session } } = await supabase.auth.getSession();
@@ -133,8 +136,8 @@
     const { error } = await confirmOrderPayment({
       orderId: orderId,
       userId: session.user.id,
-      bankId: selectedBank.id,
-      amount: parseFloat(bankAmount),
+      bankId: null,
+      amount: fixedAmount,
       senderName: bankSenderName,
     });
 
@@ -286,17 +289,18 @@
 
       <h3 class="font-semibold text-stone-800 mb-4">Konfirmasi Pembayaran</h3>
 
-      <div class="grid gap-4 sm:grid-cols-2 mb-4">
-        <div>
-          <label class="block text-sm font-medium text-stone-700 mb-1">Jumlah Transfer (Rp)</label>
-          <input type="number" class="input-field text-lg font-semibold" bind:value={bankAmount}
-            placeholder={String(parseInt(order.requested_liters || 0) * parseInt(order.oil_listings?.price_per_liter || 0))} />
-          <p class="text-xs text-stone-400 mt-1">Total: {formatRupiah(parseFloat(order.requested_liters || 0) * parseFloat(order.oil_listings?.price_per_liter || 0))}</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-stone-700 mb-1">Tanggal Transfer</label>
-          <input type="date" class="input-field" bind:value={bankTransferDate} />
-        </div>
+      <!-- Fixed amount display -->
+      <div class="bg-green-50 rounded-xl p-4 mb-4 text-center">
+        <p class="text-xs text-stone-500 uppercase tracking-wide mb-1">Jumlah yang Harus Dibayar</p>
+        <p class="text-3xl font-bold text-jelantah-700">{formatRupiah(fixedAmount)}</p>
+        <p class="text-xs text-stone-400 mt-1">
+          {order.requested_liters}L × {formatRupiah(order.oil_listings?.price_per_liter || 0)}/L
+        </p>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-stone-700 mb-1">Tanggal Transfer</label>
+        <input type="date" class="input-field" bind:value={bankTransferDate} />
       </div>
 
       <div class="mb-4">
