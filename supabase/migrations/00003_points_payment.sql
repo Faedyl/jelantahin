@@ -143,10 +143,18 @@ create policy "Anyone can read active payment banks"
   on public.payment_banks for select to authenticated
   using (is_active = true);
 
--- Payment confirmations: users see own; admins manage
-create policy "Users can view own payment confirmations"
+-- Payment confirmations: users see own (Perusahaan) or incoming (UMKM)
+create policy "Users can view own or incoming payment confirmations"
   on public.payment_confirmations for select to authenticated
-  using (user_id = auth.uid());
+  using (
+    user_id = auth.uid()
+    or
+    exists (
+      select 1 from public.orders o
+      where o.id = order_id
+      and o.umkm_id = auth.uid()
+    )
+  );
 
 create policy "Users can insert own payment confirmations"
   on public.payment_confirmations for insert to authenticated
