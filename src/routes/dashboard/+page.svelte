@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getMyListings, getOrdersAsUmkm, getOrdersAsPerusahaan } from '$lib/supabase.js';
+  import { getProfile, getMyListings, getOrdersAsUmkm, getOrdersAsPerusahaan, getPointsBalance } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
 
   let profile = $state(/** @type {any} */ (null));
@@ -9,7 +9,7 @@
   let dataLoaded = $state(false);
 
   // Role-specific data
-  let umkmStats = $state({ listings: 0, activeOrders: 0, earnings: 0 });
+  let umkmStats = $state({ listings: 0, activeOrders: 0, earnings: 0, points: 0 });
   let perusahaanStats = $state({ orders: 0, activeOrders: 0, totalLiters: 0 });
   /** @type {any[]} */ let recentOrders = $state([]);
   /** @type {any[]} */ let recentListings = $state([]);
@@ -27,9 +27,10 @@
 
     // Fetch role-specific data
     if (data.role === 'umkm') {
-      const [listingsRes, ordersRes] = await Promise.all([
+      const [listingsRes, ordersRes, pointsRes] = await Promise.all([
         getMyListings(session.user.id),
-        getOrdersAsUmkm(session.user.id)
+        getOrdersAsUmkm(session.user.id),
+        getPointsBalance(session.user.id),
       ]);
       const listings = listingsRes.data || [];
       const orders = ordersRes.data || [];
@@ -43,7 +44,8 @@
       umkmStats = {
         listings: listings.length,
         activeOrders: orders.filter(o => !['completed','cancelled'].includes(o.status)).length,
-        earnings
+        earnings,
+        points: pointsRes.data?.balance || 0,
       };
     } else if (data.role === 'perusahaan') {
       const ordersRes = await getOrdersAsPerusahaan(session.user.id);
@@ -119,7 +121,7 @@
     <!-- ── Role: UMKM ──────────────────────────────────────────── -->
     {#if profile.role === 'umkm'}
       <!-- Stats row -->
-      <div class="grid gap-4 sm:grid-cols-3 mb-8">
+      <div class="grid gap-4 sm:grid-cols-4 mb-8">
         <div class="stat-card">
           <p class="text-xs text-stone-500 uppercase tracking-wide">Total Listing</p>
           <p class="text-2xl font-bold text-stone-800 mt-1">{umkmStats.listings}</p>
@@ -132,6 +134,10 @@
           <p class="text-xs text-stone-500 uppercase tracking-wide">Estimasi Pendapatan</p>
           <p class="text-2xl font-bold text-green-600 mt-1">{formatRupiah(umkmStats.earnings)}</p>
         </div>
+        <div class="stat-card">
+          <p class="text-xs text-stone-500 uppercase tracking-wide">🏆 Kupon Poin</p>
+          <p class="text-2xl font-bold text-jelantah-600 mt-1">{umkmStats.points.toLocaleString('id-ID')}</p>
+        </div>
       </div>
 
       <!-- Quick actions + content grid -->
@@ -141,7 +147,8 @@
           <h2 class="font-semibold text-stone-800 mb-4">Aksi Cepat</h2>
           <div class="space-y-3">
             <a href="/dashboard/umkm/listing" class="btn-primary w-full justify-center">+ Ajukan Pickup Baru</a>
-            <a href="/dashboard/umkm/history" class="btn-secondary w-full justify-center">Riwayat Listing</a>
+            <a href="/dashboard/umkm/points" class="btn-secondary w-full justify-center">🏆 Tukar Poin</a>
+            <a href="/dashboard/payment" class="btn-secondary w-full justify-center">💳 Konfirmasi Pembayaran</a>
             <a href="/dashboard/umkm" class="btn-secondary w-full justify-center">Dashboard Lengkap</a>
           </div>
         </div>
@@ -221,6 +228,7 @@
           <div class="space-y-3">
             <a href="/dashboard/perusahaan/browse" class="btn-primary w-full justify-center">🔍 Cari Listing Minyak</a>
             <a href="/dashboard/perusahaan/orders" class="btn-secondary w-full justify-center">Pesanan Saya</a>
+            <a href="/dashboard/perusahaan/banks" class="btn-secondary w-full justify-center">🏦 Kelola Bank</a>
             <a href="/dashboard/perusahaan" class="btn-secondary w-full justify-center">Dashboard Lengkap</a>
           </div>
         </div>

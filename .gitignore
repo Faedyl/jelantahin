@@ -2,3 +2,5 @@ node_modules/
 .svelte-kit/
 .env
 .DS_Store
+.reasonix/
+supabase/.temp/

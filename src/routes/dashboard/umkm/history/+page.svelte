@@ -190,38 +190,31 @@
       <p class="mt-1 text-xs text-stone-400">Estimasi hasil penyaluran jelantah</p>
     </div>
 
-    <div class="card">
-      <p class="text-xs text-stone-500">Poin Reward</p>
+    <a href="/dashboard/umkm/points" class="card block hover:shadow-md transition-shadow">
+      <p class="text-xs text-stone-500">🏆 Kupon Poin</p>
       <p class="mt-1 text-2xl font-bold text-yellow-600">{rewardPoints} poin</p>
-      <p class="mt-1 text-xs text-stone-400">1 liter = 10 poin</p>
-    </div>
+      <p class="mt-1 text-xs text-stone-400">1 liter = 10 poin • Klik untuk tukar →</p>
+    </a>
   </div>
 
-  <div class="card mb-6 bg-gradient-to-br from-green-50 to-yellow-50">
+  <a href="/dashboard/umkm/points" class="card mb-6 block bg-gradient-to-br from-green-50 to-yellow-50 hover:shadow-md transition-shadow">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p class="text-sm font-semibold text-jelantah-700">Reward Jelantahin</p>
-        <h2 class="mt-1 text-lg font-bold text-stone-800">Tukar poin jadi manfaat</h2>
+        <p class="text-sm font-semibold text-jelantah-700">🏆 Kupon Poin — Tukarkan Hadiah!</p>
+        <h2 class="mt-1 text-lg font-bold text-stone-800">Kumpulkan poin, tukar jadi hadiah</h2>
         <p class="mt-1 text-sm text-stone-600">
-          Poin dari minyak jelantah yang berhasil disalurkan dapat ditukar menjadi voucher
-          atau sertifikat kontribusi lingkungan.
+          Setiap transaksi memberimu poin kupon yang bisa ditukar dengan berbagai hadiah menarik.
+          Klik di sini untuk lihat katalog!
         </p>
       </div>
 
-      <div class="flex gap-2">
-        <button onclick={openRewardModal} class="btn-primary px-3 py-2 text-xs">
-          Tukar Reward
-        </button>
-
-        <button
-          onclick={openRewardModal}
-          class="rounded-lg border border-jelantah-600 px-3 py-2 text-xs font-semibold text-jelantah-700 hover:bg-green-50"
-        >
-          Lihat Sertifikat
-        </button>
+      <div class="flex gap-2 shrink-0">
+        <span class="btn-primary px-3 py-2 text-xs pointer-events-none">
+          Lihat Hadiah →
+        </span>
       </div>
     </div>
-  </div>
+  </a>
 
   <div class="relative z-20 mb-6 flex gap-2">
     <button

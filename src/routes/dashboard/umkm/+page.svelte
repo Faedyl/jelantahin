@@ -69,7 +69,7 @@
     </div>
 
     <!-- Stats -->
-    <div class="grid gap-4 sm:grid-cols-3 mb-8">
+    <div class="grid gap-4 sm:grid-cols-4 mb-8">
       <div class="stat-card">
         <p class="text-xs text-stone-500 uppercase tracking-wide">Total Listing</p>
         <p class="text-2xl font-bold text-stone-800 mt-1">{stats.totalListings}</p>
@@ -84,6 +84,13 @@
           Rp {stats.totalEarnings.toLocaleString('id-ID')}
         </p>
       </div>
+      <a href="/dashboard/umkm/points" class="stat-card block hover:shadow-md transition-shadow">
+        <p class="text-xs text-stone-500 uppercase tracking-wide">🏆 Kupon Poin</p>
+        <p class="text-2xl font-bold text-jelantah-600 mt-1">
+          {((stats.activeOrders || 0) * 50).toLocaleString('id-ID')}
+        </p>
+        <p class="text-xs text-jelantah-500 mt-0.5">Klik untuk tukar →</p>
+      </a>
     </div>
 
     <!-- Active Orders -->
@@ -130,6 +137,31 @@
         </div>
       {/if}
       <a href="/dashboard/umkm/history" class="mt-4 inline-block text-sm text-jelantah-600 hover:text-jelantah-700">Lihat semua listing →</a>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="mt-6 grid gap-4 sm:grid-cols-3">
+      <a href="/dashboard/umkm/points" class="card flex items-center gap-3 hover:shadow-md transition-shadow">
+        <span class="text-2xl">🏆</span>
+        <div>
+          <p class="font-semibold text-stone-800 text-sm">Kupon Poin</p>
+          <p class="text-xs text-stone-500">Tukar poin jadi hadiah</p>
+        </div>
+      </a>
+      <a href="/dashboard/payment" class="card flex items-center gap-3 hover:shadow-md transition-shadow">
+        <span class="text-2xl">💳</span>
+        <div>
+          <p class="font-semibold text-stone-800 text-sm">Konfirmasi Bayar</p>
+          <p class="text-xs text-stone-500">Upload bukti transfer</p>
+        </div>
+      </a>
+      <a href="/dashboard/umkm/history" class="card flex items-center gap-3 hover:shadow-md transition-shadow">
+        <span class="text-2xl">📋</span>
+        <div>
+          <p class="font-semibold text-stone-800 text-sm">Riwayat</p>
+          <p class="text-xs text-stone-500">Semua listing & pesanan</p>
+        </div>
+      </a>
     </div>
   </div>
 {/if}

@@ -34,6 +34,7 @@
     <div class="flex items-center gap-4">
       {#if session}
         <a href="/dashboard" class="text-sm font-medium text-stone-600 hover:text-jelantah-600 transition">Dashboard</a>
+        <a href="/dashboard/payment" class="text-sm font-medium text-stone-600 hover:text-jelantah-600 transition">💳 Bayar</a>
         <a href="/logout" class="btn-secondary text-xs py-1.5 px-3">Logout</a>
       {:else}
         <a href="/login" class="text-sm font-medium text-stone-600 hover:text-jelantah-600 transition">Masuk</a>
