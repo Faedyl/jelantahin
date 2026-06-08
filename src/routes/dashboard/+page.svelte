@@ -230,6 +230,7 @@
             <a href="/dashboard/perusahaan/browse" class="btn-primary w-full justify-center">🔍 Cari Listing Minyak</a>
             <a href="/dashboard/perusahaan/orders" class="btn-secondary w-full justify-center">📋 Pesanan Saya</a>
             <a href="/dashboard/payment" class="btn-secondary w-full justify-center">💳 Pembayaran</a>
+            <a href="/dashboard/perusahaan/fee" class="btn-secondary w-full justify-center">💰 Biaya Admin</a>
             <a href="/dashboard/perusahaan" class="btn-secondary w-full justify-center">Dashboard Lengkap</a>
           </div>
         </div>

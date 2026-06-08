@@ -368,7 +368,7 @@ export async function getPaymentsForUmkm(userId) {
     .order("created_at", { ascending: false });
 }
 
-export async function confirmOrderPayment({ orderId, userId, bankId, amount, senderName }) {
+export async function confirmOrderPayment({ orderId, userId, bankId, amount, senderName, adminFee }) {
   return supabase
     .from("payment_confirmations")
     .insert([{
@@ -377,11 +377,37 @@ export async function confirmOrderPayment({ orderId, userId, bankId, amount, sen
       user_id: userId,
       bank_id: bankId || null,
       amount: amount,
+      admin_fee: adminFee || 0,
       transfer_date: new Date().toISOString().split('T')[0],
       sender_name: senderName || null,
       sender_bank: null,
       notes: `Pembayaran untuk pesanan #${orderId.slice(0, 8)}`,
     }])
+    .select()
+    .single();
+}
+
+// ─── Platform Config ─────────────────────────────────────────
+
+export async function getPlatformConfig(key) {
+  return supabase
+    .from("platform_config")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+}
+
+export async function getAllPlatformConfigs() {
+  return supabase
+    .from("platform_config")
+    .select("*")
+    .order("key");
+}
+
+export async function updatePlatformConfig(key, value) {
+  return supabase
+    .from("platform_config")
+    .upsert({ key, value, updated_at: new Date().toISOString() })
     .select()
     .single();
 }

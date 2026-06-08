@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getActivePaymentBanks, createPaymentConfirmation, getPaymentConfirmations, getPaymentConfirmationsForOrder, confirmOrderPayment } from '$lib/supabase.js';
+  import { getProfile, getActivePaymentBanks, createPaymentConfirmation, getPaymentConfirmations, getPaymentConfirmationsForOrder, confirmOrderPayment, getPlatformConfig } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
 
@@ -17,6 +17,7 @@
   let umkmProfile = $state(null);
   let orderPayments = $state([]);
   let payingForOrder = $state(false);
+  let adminFeePerTx = $state(0);
 
   // ── Pilih Bank state ──
   let selectedBank = $state(null);
@@ -96,6 +97,10 @@
       order = orderData;
 
       if (orderData) {
+        // Get admin fee
+        const { data: feeData } = await getPlatformConfig('admin_fee_per_transaction');
+        adminFeePerTx = parseInt(feeData?.value || '0');
+
         // Get UMKM bank details
         const { data: umkmData } = await supabase
           .from('profiles')
@@ -119,16 +124,17 @@
   });
 
   // ── Bayar untuk order ──
-  let fixedAmount = $derived(
+  let subtotal = $derived(
     order ? parseFloat(order.requested_liters || 0) * parseFloat(order.oil_listings?.price_per_liter || 0) : 0
   );
+  let totalToPay = $derived(subtotal + adminFeePerTx);
 
   async function handleOrderPayment() {
     bankError = '';
     bankSuccess = '';
 
     if (!bankSenderName.trim()) { bankError = 'Masukkan nama pengirim.'; return; }
-    if (fixedAmount <= 0) { bankError = 'Jumlah pembayaran tidak valid.'; return; }
+    if (totalToPay <= 0) { bankError = 'Jumlah pembayaran tidak valid.'; return; }
 
     bankSubmitting = true;
     const { data: { session } } = await supabase.auth.getSession();
@@ -137,8 +143,9 @@
       orderId: orderId,
       userId: session.user.id,
       bankId: null,
-      amount: fixedAmount,
+      amount: totalToPay,
       senderName: bankSenderName,
+      adminFee: adminFeePerTx,
     });
 
     bankSubmitting = false;
@@ -289,13 +296,23 @@
 
       <h3 class="font-semibold text-stone-800 mb-4">Konfirmasi Pembayaran</h3>
 
-      <!-- Fixed amount display -->
-      <div class="bg-green-50 rounded-xl p-4 mb-4 text-center">
-        <p class="text-xs text-stone-500 uppercase tracking-wide mb-1">Jumlah yang Harus Dibayar</p>
-        <p class="text-3xl font-bold text-jelantah-700">{formatRupiah(fixedAmount)}</p>
-        <p class="text-xs text-stone-400 mt-1">
-          {order.requested_liters}L × {formatRupiah(order.oil_listings?.price_per_liter || 0)}/L
-        </p>
+      <!-- Fixed amount display with admin fee breakdown -->
+      <div class="bg-green-50 rounded-xl p-4 mb-4">
+        <p class="text-xs text-stone-500 uppercase tracking-wide mb-2 text-center">Rincian Pembayaran</p>
+        <div class="space-y-1 text-sm">
+          <div class="flex justify-between">
+            <span class="text-stone-600">Subtotal ({order.requested_liters}L × {formatRupiah(order.oil_listings?.price_per_liter || 0)})</span>
+            <span class="font-medium text-stone-800">{formatRupiah(subtotal)}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-stone-600">Biaya Admin</span>
+            <span class="font-medium text-stone-800">{formatRupiah(adminFeePerTx)}</span>
+          </div>
+          <div class="flex justify-between border-t border-green-200 pt-2 mt-2">
+            <span class="font-semibold text-stone-800">Total yang Harus Dibayar</span>
+            <span class="text-xl font-bold text-jelantah-700">{formatRupiah(totalToPay)}</span>
+          </div>
+        </div>
       </div>
 
       <div class="mb-4">
