@@ -26,7 +26,7 @@ alter table public.platform_config enable row level security;
 create policy "Anyone can read platform config"
   on public.platform_config for select to authenticated using (true);
 
-create policy "Authenticated can update platform config"
+create policy "Authenticated can insert platform config"
   on public.platform_config for insert to authenticated with check (true);
 
 create policy "Authenticated can update platform config"
