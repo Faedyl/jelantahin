@@ -69,7 +69,7 @@ create table public.payment_banks (
 -- 6. PAYMENT CONFIRMATIONS (user uploads proof of transfer)
 create table public.payment_confirmations (
   id              uuid        primary key default gen_random_uuid(),
-  transaction_id  uuid        not null references public.transactions(id) on delete cascade,
+  transaction_id  uuid        references public.transactions(id) on delete set null,
   user_id         uuid        not null references public.profiles(id) on delete cascade,
   bank_id         uuid        references public.payment_banks(id) on delete set null,
   amount          numeric(14,2) not null check (amount > 0),
