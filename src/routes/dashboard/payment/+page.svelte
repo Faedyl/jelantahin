@@ -17,7 +17,7 @@
   let umkmProfile = $state(null);
   let orderPayments = $state([]);
   let payingForOrder = $state(false);
-  let adminFeePerTx = $state(0);
+  let adminFeePercent = $state(0);
 
   // ── Pilih Bank state ──
   let selectedBank = $state(null);
@@ -98,8 +98,8 @@
 
       if (orderData) {
         // Get admin fee
-        const { data: feeData } = await getPlatformConfig('admin_fee_per_transaction');
-        adminFeePerTx = parseInt(feeData?.value || '0');
+        const { data: feeData } = await getPlatformConfig('admin_fee_percentage');
+        adminFeePercent = parseFloat(feeData?.value || '0');
 
         // Get UMKM bank details
         const { data: umkmData } = await supabase
@@ -127,7 +127,8 @@
   let subtotal = $derived(
     order ? parseFloat(order.requested_liters || 0) * parseFloat(order.oil_listings?.price_per_liter || 0) : 0
   );
-  let totalToPay = $derived(subtotal + adminFeePerTx);
+  let adminFeeAmount = $derived(subtotal * (adminFeePercent / 100));
+  let totalToPay = $derived(subtotal + adminFeeAmount);
 
   async function handleOrderPayment() {
     bankError = '';
@@ -145,7 +146,7 @@
       bankId: null,
       amount: totalToPay,
       senderName: bankSenderName,
-      adminFee: adminFeePerTx,
+      adminFee: adminFeeAmount,
     });
 
     bankSubmitting = false;
@@ -305,8 +306,8 @@
             <span class="font-medium text-stone-800">{formatRupiah(subtotal)}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-stone-600">Biaya Admin</span>
-            <span class="font-medium text-stone-800">{formatRupiah(adminFeePerTx)}</span>
+            <span class="text-stone-600">Biaya Admin ({adminFeePercent}%)</span>
+            <span class="font-medium text-stone-800">{formatRupiah(adminFeeAmount)}</span>
           </div>
           <div class="flex justify-between border-t border-green-200 pt-2 mt-2">
             <span class="font-semibold text-stone-800">Total yang Harus Dibayar</span>

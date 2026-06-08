@@ -15,9 +15,9 @@ create table if not exists public.platform_config (
   updated_at  timestamptz not null default now()
 );
 
--- Insert default admin fee: Rp 2,000 per transaction
+-- Insert default admin fee: 2.5% per transaction
 insert into public.platform_config (key, value, description)
-values ('admin_fee_per_transaction', '2000', 'Biaya admin per transaksi (dalam Rupiah)')
+values ('admin_fee_percentage', '2.5', 'Biaya admin per transaksi (dalam persen)')
 on conflict (key) do nothing;
 
 -- RLS: everyone can read, only authenticated can update
