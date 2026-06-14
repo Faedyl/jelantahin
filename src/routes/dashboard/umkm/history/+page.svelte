@@ -78,7 +78,13 @@
     tab = value;
   }
 
-  let listingMarkers = $derived(
+  let sortedListings = $derived(
+    [...listings].sort((a, b) => {
+      if (a.status === 'available' && b.status !== 'available') return -1;
+      if (a.status !== 'available' && b.status === 'available') return 1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    })
+  );
     listings
       .filter((l) => l.latitude != null && l.longitude != null)
       .map((l) => ({
@@ -439,7 +445,7 @@
         </div>
       {:else}
         <div class="divide-y divide-earth-300/50">
-          {#each listings as listing}
+          {#each sortedListings as listing}
             <div class="flex items-center justify-between py-3">
               <div>
                 <p class="text-sm font-medium text-earth-800">

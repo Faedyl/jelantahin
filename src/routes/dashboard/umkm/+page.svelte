@@ -68,6 +68,14 @@
     orderStatusSnapshot = snap;
   }
 
+  let sortedListings = $derived(
+    [...listings].sort((a, b) => {
+      if (a.status === 'available' && b.status !== 'available') return -1;
+      if (a.status !== 'available' && b.status === 'available') return 1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    })
+  );
+
   let pendingOrders = $derived(orders.filter(o => o.status === 'pending'));
   let pendingCount = $derived(pendingOrders.length);
 
@@ -404,7 +412,7 @@
         </div>
       {:else}
         <div class="space-y-3">
-          {#each listings.slice(0, 5) as listing}
+          {#each sortedListings.slice(0, 5) as listing}
             <div class="flex items-center justify-between border-b border-earth-300/50 pb-3 last:border-0 last:pb-0">
               <div class="flex items-start gap-3">
                 <div class="w-8 h-8 rounded-full bg-herb-200/50 flex items-center justify-center flex-shrink-0">
