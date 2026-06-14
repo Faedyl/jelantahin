@@ -55,43 +55,53 @@
     saving = false;
 
     if (err) { error = err.message; return; }
-    success = '✅ Data bank berhasil disimpan! Perusahaan akan melihat rekening ini saat melakukan pembayaran.';
+    success = 'Data bank berhasil disimpan! Perusahaan akan melihat rekening ini saat melakukan pembayaran.';
   }
 </script>
 
-<div class="mx-auto max-w-lg px-4 py-8">
-  <a href="/dashboard/umkm" class="text-sm text-jelantah-600 hover:text-jelantah-700 mb-4 inline-block">
-    ← Kembali ke Dashboard
+<div class="page-container-narrow py-8">
+  <a href="/dashboard/umkm" class="nav-link mb-4 inline-flex">
+    <svg class="icon w-4 h-4"><use href="/icons.svg#arrow-right"/></svg>
+    <span>Kembali ke Dashboard</span>
   </a>
 
-  <div class="card">
+  <div class="card p-6">
     <div class="text-center mb-6">
-      <span class="text-5xl">🏦</span>
-      <h1 class="text-xl font-bold text-stone-800 mt-3">Rekening Penerimaan</h1>
-      <p class="text-sm text-stone-500">
+      <svg class="icon w-12 h-12 mx-auto text-gold-500 mb-3"><use href="/icons.svg#bank"/></svg>
+      <h1 class="page-title text-xl">Rekening Penerimaan</h1>
+      <p class="page-subtitle">
         Perusahaan akan transfer ke rekening ini setelah pickup selesai
       </p>
     </div>
 
     {#if loading}
-      <p class="text-stone-400 text-sm text-center py-8">Memuat...</p>
+      <p class="text-sm text-earth-500 text-center py-8">Memuat...</p>
     {:else}
       {#if error}
-        <div class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div class="alert-error mb-4">
+          <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#alert-circle"/></svg>
+          <span>{error}</span>
+        </div>
       {/if}
       {#if success}
-        <div class="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">{success}</div>
+        <div class="alert-success mb-4">
+          <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#check"/></svg>
+          <span>{success}</span>
+        </div>
       {/if}
 
-      <div class="mb-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-700">
-        <p class="font-semibold">🔒 Aman untuk kamu</p>
-        <p class="mt-1">Perusahaan hanya bisa melihat rekening ini <strong>setelah pickup selesai</strong> dan pesanan sudah dikonfirmasi. Data bankmu aman.</p>
+      <div class="alert-info mb-4">
+        <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#info"/></svg>
+        <div>
+          <p class="font-semibold">Aman untuk kamu</p>
+          <p class="mt-1">Perusahaan hanya bisa melihat rekening ini <strong>setelah pickup selesai</strong> dan pesanan sudah dikonfirmasi. Data bankmu aman.</p>
+        </div>
       </div>
 
       <form onsubmit={(e) => { e.preventDefault(); handleSave(); }}>
-        <label class="block text-sm font-medium text-stone-700 mb-1">Nama Bank</label>
+        <label class="input-label">Nama Bank</label>
         <div class="relative mb-4">
-          <select class="input-field" bind:value={bankName} required>
+          <select class="input" bind:value={bankName} required>
             <option value="">-- Pilih Bank --</option>
             {#each commonBanks as b}
               <option value={b}>{b}</option>
@@ -99,38 +109,37 @@
           </select>
         </div>
 
-        <label class="block text-sm font-medium text-stone-700 mb-1">Nomor Rekening</label>
+        <label class="input-label">Nomor Rekening</label>
         <input
           type="text"
-          class="input-field mb-4"
+          class="input mb-4"
           bind:value={bankAccount}
           placeholder="1234567890"
           required
           inputmode="numeric"
         />
 
-        <label class="block text-sm font-medium text-stone-700 mb-1">Atas Nama</label>
+        <label class="input-label">Atas Nama</label>
         <input
           type="text"
-          class="input-field mb-6"
+          class="input mb-6"
           bind:value={bankHolder}
           placeholder="Nama pemilik rekening"
           required
         />
 
-        <button type="submit" class="btn-primary w-full" disabled={saving}>
+        <button type="submit" class="btn-primary btn-md w-full" disabled={saving}>
           {saving ? 'Menyimpan...' : 'Simpan Rekening'}
         </button>
       </form>
 
       {#if profile?.bank_name}
-        <div class="mt-6 pt-4 border-t border-stone-100">
-          <p class="text-xs text-stone-500 mb-2">Rekening tersimpan saat ini:</p>
-          <div class="rounded-xl bg-green-50 p-3">
-            <p class="font-semibold text-stone-800">{profile.bank_name}</p>
-            <p class="text-sm font-mono text-stone-700">{profile.bank_account}</p>
-            <p class="text-xs text-stone-500">a.n. {profile.bank_holder}</p>
-          </div>
+        <div class="divider"></div>
+        <p class="text-xs text-earth-600 mb-2">Rekening tersimpan saat ini:</p>
+        <div class="rounded-lg bg-herb-100 p-4">
+          <p class="font-semibold text-earth-800">{profile.bank_name}</p>
+          <p class="text-sm font-mono text-earth-700">{profile.bank_account}</p>
+          <p class="text-xs text-earth-600">a.n. {profile.bank_holder}</p>
         </div>
       {/if}
     {/if}

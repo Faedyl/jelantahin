@@ -99,44 +99,57 @@
   }
 </script>
 
-<div class="mx-auto max-w-6xl px-4 py-8">
-  <a href="/dashboard/perusahaan" class="text-sm text-jelantah-600 hover:text-jelantah-700 mb-4 inline-block">
-    ← Kembali ke Dashboard
+<div class="page-container py-8">
+  <!-- Back link -->
+  <a href="/dashboard/perusahaan" class="nav-link mb-4 inline-flex">
+    <svg class="icon w-4 h-4"><use href="/icons.svg#arrow-right"/></svg>
+    <span>Kembali ke Dashboard</span>
   </a>
 
-  <div class="flex items-center justify-between mb-6">
+  <!-- Page Header -->
+  <div class="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h1 class="text-xl font-bold text-stone-800">Permintaan Pickup Tersedia</h1>
-      <p class="text-sm text-stone-500">{listings.length} permintaan dari UMKM</p>
+      <h1 class="page-title">Permintaan Pickup Tersedia</h1>
+      <p class="page-subtitle">{listings.length} permintaan dari UMKM</p>
     </div>
 
     <!-- View toggle -->
-    <div class="flex gap-1 rounded-lg border border-stone-200 bg-white p-1 text-sm">
+    <div class="flex gap-1 rounded-lg border border-earth-400 bg-white p-1 text-sm">
       <button
         onclick={() => viewMode = 'map'}
-        class="px-3 py-1.5 rounded-md transition {viewMode === 'map' ? 'bg-jelantah-100 text-jelantah-700 font-semibold' : 'text-stone-500 hover:text-stone-700'}"
+        class="px-3 py-1.5 rounded-md transition {viewMode === 'map' ? 'bg-gold-200/50 text-gold-700 font-semibold' : 'text-earth-600 hover:text-earth-800'}"
       >
-        🗺️ Peta
+        <svg class="icon w-4 h-4 inline-block mr-1"><use href="/icons.svg#map-pin"/></svg>
+        Peta
       </button>
       <button
         onclick={() => viewMode = 'list'}
-        class="px-3 py-1.5 rounded-md transition {viewMode === 'list' ? 'bg-jelantah-100 text-jelantah-700 font-semibold' : 'text-stone-500 hover:text-stone-700'}"
+        class="px-3 py-1.5 rounded-md transition {viewMode === 'list' ? 'bg-gold-200/50 text-gold-700 font-semibold' : 'text-earth-600 hover:text-earth-800'}"
       >
-        📋 Daftar
+        <svg class="icon w-4 h-4 inline-block mr-1"><use href="/icons.svg#menu"/></svg>
+        Daftar
       </button>
     </div>
   </div>
 
   {#if error}
-    <div class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
+    <div class="alert-error mb-4">
+      <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#alert-circle"/></svg>
+      <span>{error}</span>
+    </div>
   {/if}
 
   {#if loading}
-    <p class="text-stone-400 text-sm">Memuat...</p>
+    <div class="skeleton-card">
+      <div class="skeleton-text"></div>
+      <div class="skeleton-text"></div>
+      <div class="skeleton-text w-2/3"></div>
+    </div>
   {:else if listings.length === 0}
-    <div class="card text-center py-12">
-      <p class="text-stone-400">Belum ada listing minyak tersedia saat ini.</p>
-      <p class="text-sm text-stone-400 mt-1">Coba lagi nanti atau perluas area pencarian.</p>
+    <div class="empty-state">
+      <svg class="empty-state-icon"><use href="/icons.svg#olive-drop"/></svg>
+      <p class="empty-state-title">Belum ada permintaan pickup</p>
+      <p class="empty-state-desc">Coba lagi nanti atau perluas area pencarian.</p>
     </div>
   {:else}
     <!-- Map view -->
@@ -150,48 +163,59 @@
       </div>
 
       {#if markers.length < listings.length}
-        <p class="text-xs text-stone-400 mb-4">
-          ℹ️ {listings.length - markers.length} permintaan tidak memiliki koordinat lokasi dan tidak muncul di peta.
-        </p>
+        <div class="alert-info mb-4">
+          <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#info"/></svg>
+          <span>{listings.length - markers.length} permintaan tidak memiliki koordinat lokasi dan tidak muncul di peta.</span>
+        </div>
       {/if}
 
-      <!-- Listings below the map (as a compact list) -->
-      <h2 class="font-semibold text-stone-800 mb-3">Daftar Permintaan</h2>
+      <!-- Listings below the map -->
+      <h2 class="font-semibold font-display text-earth-900 mb-3">Daftar Permintaan</h2>
       <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {#each listings as listing}
-          <div class="card p-4">
-            <div class="flex items-start justify-between mb-2">
+          <div class="order-card">
+            <div class="order-card-header mb-2">
               <div>
-                <h3 class="font-semibold text-sm text-stone-800">{listing.profiles?.umkm_name || listing.profiles?.full_name || 'UMKM'}</h3>
-                <p class="text-xs text-stone-500">
+                <h3 class="order-card-title text-sm">{listing.profiles?.umkm_name || listing.profiles?.full_name || 'UMKM'}</h3>
+                <p class="text-xs text-earth-600 flex items-center gap-1 mt-0.5">
+                  <svg class="icon w-3 h-3"><use href="/icons.svg#map-pin"/></svg>
                   {listing.city || listing.pickup_address?.slice(0, 30)}
                 </p>
               </div>
-              <span class="badge-green text-[10px]">Available</span>
+              <span class="badge-success">Available</span>
             </div>
 
-            <div class="flex gap-3 text-sm mb-2">
-              <span class="font-semibold text-stone-800">{listing.quantity_liters}L</span>
-              <span class="text-stone-500">{formatRupiah(listing.price_per_liter)}/L</span>
+            <div class="flex gap-4 text-sm mb-2">
+              <span class="font-semibold text-earth-900">{listing.quantity_liters}L</span>
+              <span class="text-earth-600">{formatRupiah(listing.price_per_liter)}/L</span>
             </div>
 
             {#if listing.description}
-              <p class="text-xs text-stone-500 mb-2 line-clamp-2">{listing.description}</p>
+              <p class="text-xs text-earth-600 mb-2 line-clamp-2">{listing.description}</p>
             {/if}
 
-            <div class="flex items-center justify-between mt-2 pt-2 border-t border-stone-100">
+            <div class="order-card-actions mt-2 pt-2">
               {#if listing.available_until}
-                <p class="text-[11px] text-stone-400">Hingga {new Date(listing.available_until).toLocaleDateString('id-ID')}</p>
+                <p class="text-[11px] text-earth-500 flex items-center gap-1">
+                  <svg class="icon w-3 h-3"><use href="/icons.svg#clock-rotate"/></svg>
+                  Hingga {new Date(listing.available_until).toLocaleDateString('id-ID')}
+                </p>
               {:else}
                 <span></span>
               {/if}
               <button
                 id="claim-{listing.id}"
                 onclick={() => claimListing(listing)}
-                class="btn-primary text-[11px] py-1.5 px-3"
+                class="btn-primary btn-sm"
                 disabled={actionLoading}
               >
-                {actionLoading ? '...' : 'Terima Pickup'}
+                {#if actionLoading}
+                  <svg class="icon w-3.5 h-3.5 animate-spin"><use href="/icons.svg#loader"/></svg>
+                  Memproses...
+                {:else}
+                  <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#package"/></svg>
+                  Terima Pickup
+                {/if}
               </button>
             </div>
           </div>
@@ -200,42 +224,54 @@
 
     {/if}
 
-    <!-- List view (original card grid) -->
+    <!-- List view -->
     {#if viewMode === 'list'}
       <div class="grid gap-4 sm:grid-cols-2">
         {#each listings as listing}
-          <div class="card">
-            <div class="flex items-start justify-between mb-3">
+          <div class="order-card">
+            <div class="order-card-header mb-3">
               <div>
-                <h3 class="font-semibold text-stone-800">{listing.profiles?.umkm_name || listing.profiles?.full_name || 'UMKM'}</h3>
-                <p class="text-xs text-stone-500">{listing.city || listing.pickup_address?.slice(0, 30)}</p>
+                <h3 class="order-card-title">{listing.profiles?.umkm_name || listing.profiles?.full_name || 'UMKM'}</h3>
+                <p class="text-xs text-earth-600 flex items-center gap-1 mt-0.5">
+                  <svg class="icon w-3 h-3"><use href="/icons.svg#map-pin"/></svg>
+                  {listing.city || listing.pickup_address?.slice(0, 30)}
+                </p>
               </div>
-              <span class="badge-green">Available</span>
+              <span class="badge-success">Available</span>
             </div>
 
             <div class="flex gap-4 text-sm mb-4">
               <div>
-                <p class="text-stone-500">Jumlah</p>
-                <p class="font-semibold text-stone-800">{listing.quantity_liters} L</p>
+                <p class="stat-label">Jumlah</p>
+                <p class="font-semibold font-display text-earth-900">{listing.quantity_liters} L</p>
               </div>
               <div>
-                <p class="text-stone-500">Harga</p>
-                <p class="font-semibold text-stone-800">{formatRupiah(listing.price_per_liter)}/L</p>
+                <p class="stat-label">Harga</p>
+                <p class="font-semibold font-display text-earth-900">{formatRupiah(listing.price_per_liter)}/L</p>
               </div>
             </div>
 
             {#if listing.description}
-              <p class="text-xs text-stone-500 mb-3">{listing.description}</p>
+              <p class="text-xs text-earth-600 mb-3">{listing.description}</p>
             {/if}
 
-            <div class="flex items-center justify-between">
+            <div class="order-card-actions">
               {#if listing.available_until}
-                <p class="text-xs text-stone-400">Tersedia hingga {new Date(listing.available_until).toLocaleDateString('id-ID')}</p>
+                <p class="text-xs text-earth-600 flex items-center gap-1">
+                  <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#clock-rotate"/></svg>
+                  Tersedia hingga {new Date(listing.available_until).toLocaleDateString('id-ID')}
+                </p>
               {:else}
                 <span></span>
               {/if}
-              <button onclick={() => claimListing(listing)} class="btn-primary text-xs py-1.5 px-4" disabled={actionLoading}>
-                {actionLoading ? 'Memproses...' : 'Terima Pickup'}
+              <button onclick={() => claimListing(listing)} class="btn-primary btn-sm" disabled={actionLoading}>
+                {#if actionLoading}
+                  <svg class="icon w-3.5 h-3.5 animate-spin"><use href="/icons.svg#loader"/></svg>
+                  Memproses...
+                {:else}
+                  <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#check"/></svg>
+                  Terima Pickup
+                {/if}
               </button>
             </div>
           </div>

@@ -139,17 +139,19 @@
 
 <div class="map-wrapper" style="height: {height};">
   {#if pickerMode}
-    <div class="mb-1 text-xs text-stone-500">
+    <div class="mb-1 text-xs text-earth-600">
       Klik peta untuk menandai lokasi penjemputan
       {#if latitude != null}
-        — ✅ Lokasi ditandai
+        —
+        <svg class="icon w-3 h-3 text-herb-600 inline"><use href="/icons.svg#check"/></svg>
+        Lokasi ditandai
       {/if}
     </div>
   {/if}
 
   <div
     bind:this={mapEl}
-    class="map-container rounded-xl border border-stone-200"
+    class="map-container rounded-lg border border-earth-300/60"
     style="height: 100%;"
   ></div>
 </div>

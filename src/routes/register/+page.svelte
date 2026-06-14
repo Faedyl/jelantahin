@@ -15,6 +15,7 @@
   let address = $state('');
   let error = $state('');
   let loading = $state(false);
+  let successMessage = $state('');
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -32,7 +33,6 @@
     loading = true;
 
     if (DEV_BYPASS_EMAIL) {
-      // ── Dev bypass: create user via Admin API (no email) ──
       const res = await fetch('/api/dev-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -46,7 +46,6 @@
         return;
       }
 
-      // User created — now sign in with password
       const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
       loading = false;
 
@@ -57,7 +56,6 @@
 
       goto('/dashboard');
     } else {
-      // ── Normal flow: signup triggers email OTP ──
       const { data, error: err } = await supabase.auth.signUp({
         email,
         password,
@@ -78,104 +76,115 @@
         return;
       }
 
-      // Show success — user must check email
-      error = ''; // repurpose error as success display
-      // We keep error empty but show a success banner inline
-      // (handled by the template below with a success flag)
-      showSuccess('Akun berhasil dibuat! Cek email Anda untuk verifikasi.');
+      successMessage = 'Akun berhasil dibuat! Cek email Anda untuk verifikasi.';
+      setTimeout(() => goto('/login'), 3000);
     }
   }
-
-  let successMessage = $state('');
-
-  function showSuccess(msg) {
-    successMessage = msg;
-    setTimeout(() => goto('/login'), 3000);
-  }
-
-  // Pre-fill phone + address back into the server-created profile
-  // (runs after redirect if needed — kept for future use)
 </script>
 
-<div class="mx-auto mt-8 max-w-md px-4 pb-16">
-  <div class="card">
-    <div class="text-center mb-6">
-      <span class="text-4xl">🫒</span>
-      <h1 class="mt-3 text-xl font-bold text-stone-800">Daftar Jelantahin</h1>
-      <p class="mt-1 text-sm text-stone-500">Pilih peran Anda untuk memulai</p>
+<div class="flex min-h-[calc(100vh-4rem)] items-start justify-center py-12">
+  <div class="w-full max-w-narrow px-4 animate-slide-up">
+    <!-- Brand header -->
+    <div class="text-center mb-8">
+      <svg class="mx-auto w-12 h-12 text-gold-500 mb-4" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+        <path d="M40 14C50 24 56 34 56 44C56 54 48 60 40 60C32 60 24 54 24 44C24 34 30 24 40 14Z" fill="currentColor"/>
+        <ellipse cx="34" cy="44" rx="8" ry="12" fill="white" opacity="0.12" transform="rotate(-20 34 44)"/>
+      </svg>
+      <h1 class="font-display text-2xl font-bold text-earth-900">Daftar</h1>
+      <p class="text-sm text-earth-600 mt-1">Pilih peran Anda untuk memulai</p>
     </div>
 
     {#if DEV_BYPASS_EMAIL}
-      <div class="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-700">
-        ⚡ Dev mode: email OTP bypass aktif — langsung login setelah daftar.
+      <div class="alert-warning mb-5">
+        <svg class="icon w-4 h-4 mt-0.5 shrink-0"><use href="/icons.svg#info"/></svg>
+        <span>Dev mode: email OTP bypass aktif — langsung login setelah daftar.</span>
       </div>
     {/if}
 
     {#if error}
-      <div class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
-    {/if}
-    {#if successMessage}
-      <div class="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">{successMessage}</div>
-    {/if}
-
-    {#if step === 1}
-      <div class="grid grid-cols-2 gap-3 mb-6">
-        <button onclick={() => role = 'umkm'}
-          class="rounded-xl border-2 p-4 text-center transition {role === 'umkm' ? 'border-jelantah-400 bg-jelantah-50' : 'border-stone-200 hover:border-stone-300'}">
-          <span class="text-2xl">🏪</span>
-          <p class="mt-1 text-sm font-semibold text-stone-800">UMKM</p>
-          <p class="text-xs text-stone-500">Penjual minyak jelantah</p>
-        </button>
-        <button onclick={() => role = 'perusahaan'}
-          class="rounded-xl border-2 p-4 text-center transition {role === 'perusahaan' ? 'border-blue-400 bg-blue-50' : 'border-stone-200 hover:border-stone-300'}">
-          <span class="text-2xl">🏭</span>
-          <p class="mt-1 text-sm font-semibold text-stone-800">Perusahaan</p>
-          <p class="text-xs text-stone-500">Kolektor / pembeli</p>
-        </button>
+      <div class="alert-error mb-5">
+        <svg class="icon w-4 h-4 mt-0.5 shrink-0"><use href="/icons.svg#alert-circle"/></svg>
+        <span>{error}</span>
       </div>
-      <button onclick={() => step = 2} class="btn-primary w-full">Lanjutkan</button>
     {/if}
 
-    {#if step === 2}
-      <form onsubmit={handleRegister}>
-        <label class="block text-sm font-medium text-stone-700 mb-1">Nama Lengkap</label>
-        <input type="text" class="input-field mb-3" bind:value={fullName} placeholder="Nama Anda" required />
+    {#if successMessage}
+      <div class="alert-success mb-5">
+        <svg class="icon w-4 h-4 mt-0.5 shrink-0"><use href="/icons.svg#check"/></svg>
+        <span>{successMessage}</span>
+      </div>
+    {/if}
 
-        {#if role === 'umkm'}
-          <label class="block text-sm font-medium text-stone-700 mb-1">Nama Usaha (UMKM)</label>
-          <input type="text" class="input-field mb-3" bind:value={umkmName} placeholder="e.g. Warung Bu Ani" />
-        {:else}
-          <label class="block text-sm font-medium text-stone-700 mb-1">Nama Perusahaan</label>
-          <input type="text" class="input-field mb-3" bind:value={companyName} placeholder="e.g. PT Energi Hijau" />
-        {/if}
-
-        <label class="block text-sm font-medium text-stone-700 mb-1">Email</label>
-        <input type="email" class="input-field mb-3" bind:value={email} placeholder="contoh@email.com" required />
-
-        <label class="block text-sm font-medium text-stone-700 mb-1">No. Telepon</label>
-        <input type="tel" class="input-field mb-3" bind:value={phone} placeholder="0812-xxxx-xxxx" />
-
-        <label class="block text-sm font-medium text-stone-700 mb-1">Alamat</label>
-        <textarea class="input-field mb-3" bind:value={address} placeholder="Alamat lengkap" rows="2"></textarea>
-
-        <label class="block text-sm font-medium text-stone-700 mb-1">Password</label>
-        <input type="password" class="input-field mb-3" bind:value={password} placeholder="Min 6 karakter" required minlength="6" />
-
-        <label class="block text-sm font-medium text-stone-700 mb-1">Konfirmasi Password</label>
-        <input type="password" class="input-field mb-6" bind:value={confirmPassword} placeholder="Ulangi password" required />
-
-        <div class="flex gap-3">
-          <button type="button" onclick={() => step = 1} class="btn-secondary flex-1">Kembali</button>
-          <button type="submit" class="btn-primary flex-1" disabled={loading}>
-            {loading ? 'Memproses...' : 'Daftar'}
+    <div class="card p-6 sm:p-8">
+      {#if step === 1}
+        <!-- Role Selection -->
+        <div class="grid grid-cols-2 gap-3 mb-6">
+          <button
+            onclick={() => role = 'umkm'}
+            class="rounded-lg border-2 p-5 text-center transition-all duration-200 {role === 'umkm' ? 'border-gold-500 bg-gold-100/50 shadow-brand-sm' : 'border-earth-300 bg-white hover:border-earth-400 hover:shadow-brand-sm'}"
+          >
+            <svg class="icon w-8 h-8 mx-auto mb-2 {role === 'umkm' ? 'text-gold-600' : 'text-earth-500'}"><use href="/icons.svg#shop"/></svg>
+            <p class="text-sm font-semibold text-earth-800">UMKM</p>
+            <p class="text-xs text-earth-600 mt-0.5">Penjual minyak jelantah</p>
+          </button>
+          <button
+            onclick={() => role = 'perusahaan'}
+            class="rounded-lg border-2 p-5 text-center transition-all duration-200 {role === 'perusahaan' ? 'border-herb-500 bg-herb-100/50 shadow-brand-sm' : 'border-earth-300 bg-white hover:border-earth-400 hover:shadow-brand-sm'}"
+          >
+            <svg class="icon w-8 h-8 mx-auto mb-2 {role === 'perusahaan' ? 'text-herb-600' : 'text-earth-500'}"><use href="/icons.svg#building"/></svg>
+            <p class="text-sm font-semibold text-earth-800">Perusahaan</p>
+            <p class="text-xs text-earth-600 mt-0.5">Kolektor / pembeli</p>
           </button>
         </div>
-      </form>
+        <button onclick={() => step = 2} class="btn-primary w-full btn-md">Lanjutkan</button>
+      {/if}
 
-      <p class="mt-4 text-center text-sm text-stone-500">
-        Sudah punya akun?
-        <a href="/login" class="font-medium text-jelantah-600 hover:text-jelantah-700">Masuk</a>
-      </p>
-    {/if}
+      {#if step === 2}
+        <form onsubmit={handleRegister}>
+          <label for="fullName" class="input-label">Nama Lengkap</label>
+          <input id="fullName" type="text" class="input mb-4" bind:value={fullName} placeholder="Nama Anda" required />
+
+          {#if role === 'umkm'}
+            <label for="umkmName" class="input-label">Nama Usaha (UMKM)</label>
+            <input id="umkmName" type="text" class="input mb-4" bind:value={umkmName} placeholder="e.g. Warung Bu Ani" />
+          {:else}
+            <label for="companyName" class="input-label">Nama Perusahaan</label>
+            <input id="companyName" type="text" class="input mb-4" bind:value={companyName} placeholder="e.g. PT Energi Hijau" />
+          {/if}
+
+          <label for="email" class="input-label">Email</label>
+          <input id="email" type="email" class="input mb-4" bind:value={email} placeholder="contoh@email.com" required autocomplete="email" />
+
+          <label for="phone" class="input-label">No. Telepon</label>
+          <input id="phone" type="tel" class="input mb-4" bind:value={phone} placeholder="0812-xxxx-xxxx" />
+
+          <label for="address" class="input-label">Alamat</label>
+          <textarea id="address" class="textarea mb-4" bind:value={address} placeholder="Alamat lengkap" rows="2"></textarea>
+
+          <label for="password" class="input-label">Password</label>
+          <input id="password" type="password" class="input mb-4" bind:value={password} placeholder="Min 6 karakter" required minlength="6" autocomplete="new-password" />
+
+          <label for="confirmPassword" class="input-label">Konfirmasi Password</label>
+          <input id="confirmPassword" type="password" class="input mb-6" bind:value={confirmPassword} placeholder="Ulangi password" required autocomplete="new-password" />
+
+          <div class="flex gap-3">
+            <button type="button" onclick={() => step = 1} class="btn-secondary flex-1 btn-md">Kembali</button>
+            <button type="submit" class="btn-primary flex-1 btn-md" disabled={loading}>
+              {#if loading}
+                <svg class="icon w-4 h-4 icon-spin"><use href="/icons.svg#loader"/></svg>
+                Memproses...
+              {:else}
+                Daftar
+              {/if}
+            </button>
+          </div>
+        </form>
+
+        <p class="mt-5 text-center text-sm text-earth-600">
+          Sudah punya akun?
+          <a href="/login" class="font-semibold text-gold-600 hover:text-gold-700 transition-colors">Masuk</a>
+        </p>
+      {/if}
+    </div>
   </div>
 </div>

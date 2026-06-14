@@ -175,17 +175,20 @@
     role="document"
   >
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+    <div class="flex items-center justify-between border-b border-earth-300/60 px-5 py-4">
       <div>
-        <p class="text-sm font-semibold text-jelantah-600">💬 Chat</p>
-        <h2 class="text-lg font-bold text-stone-800">Diskusi Pesanan</h2>
+        <p class="text-sm font-semibold text-gold-600 flex items-center gap-1.5">
+          <svg class="icon w-4 h-4"><use href="/icons.svg#message-circle"/></svg>
+          Chat
+        <h2 class="text-lg font-bold text-earth-900">Diskusi Pesanan</h2>
       </div>
       <button
         type="button"
         onclick={onclose}
-        class="rounded-lg px-3 py-1 text-sm text-stone-500 hover:bg-stone-100"
+        class="btn-ghost btn-sm"
+        aria-label="Tutup"
       >
-        ✕
+        <svg class="icon w-5 h-5"><use href="/icons.svg#x"/></svg>
       </button>
     </div>
 
@@ -196,11 +199,11 @@
     >
       {#if loading}
         <div class="flex items-center justify-center py-12">
-          <p class="text-sm text-stone-400">Memuat pesan...</p>
+          <p class="text-sm text-earth-600">Memuat pesan...</p>
         </div>
       {:else if messages.length === 0 && !paymentInfo}
         <div class="flex items-center justify-center py-12">
-          <p class="text-sm text-stone-400">
+          <p class="text-sm text-earth-600">
             {chatDisabled ? 'Tidak ada pesan.' : 'Belum ada pesan. Mulai diskusi dengan mengirim pesan di bawah.'}
           </p>
         </div>
@@ -208,17 +211,17 @@
         {#each groupedMessages as item}
           {#if item.type === 'date'}
             <div class="flex justify-center">
-              <span class="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-500">
+              <span class="rounded-full bg-earth-200 px-3 py-1 text-xs text-earth-600">
                 {item.date}
               </span>
             </div>
           {:else if item.type === 'announcement'}
             <div class="flex justify-center">
-              <div class="flex max-w-[90%] items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800 ring-1 ring-green-200">
-                <span class="text-lg">💰</span>
+              <div class="flex max-w-[90%] items-center gap-2 rounded-xl bg-herb-100 px-4 py-3 text-sm text-herb-700 ring-1 ring-herb-200">
+                <svg class="icon w-5 h-5 text-herb-600 shrink-0"><use href="/icons.svg#credit-card"/></svg>
                 <div class="text-center">
                   <p class="font-semibold">Pembayaran Telah Dikonfirmasi</p>
-                  <p class="text-xs text-green-600">
+                  <p class="text-xs text-herb-600">
                     {formatRupiah(item.paymentInfo.amount)} —
                     {formatTime(item.paymentInfo.completed_at)}
                   </p>
@@ -230,19 +233,19 @@
             <div class="flex {isOwnMessage(msg) ? 'justify-end' : 'justify-start'}">
               <div class="max-w-[80%]">
                 {#if !isOwnMessage(msg)}
-                  <p class="mb-1 text-xs font-medium text-stone-500 px-1">
+                  <p class="mb-1 text-xs font-medium text-earth-600 px-1">
                     {getDisplayName(msg)}
                   </p>
                 {/if}
                 <div
                   class="rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm {isOwnMessage(msg)
-                    ? 'bg-jelantah-500 text-white rounded-br-md'
-                    : 'bg-stone-100 text-stone-800 rounded-bl-md'}"
+                    ? 'bg-gold-500 text-white rounded-br-md'
+                    : 'bg-earth-200 text-earth-900 rounded-bl-md'}"
                 >
                   <p class="whitespace-pre-wrap break-words">{msg.message}</p>
                 </div>
                 <p
-                  class="mt-0.5 text-[10px] text-stone-400 px-1 {isOwnMessage(msg)
+                  class="mt-0.5 text-[10px] text-earth-600 px-1 {isOwnMessage(msg)
                     ? 'text-right'
                     : 'text-left'}"
                 >
@@ -256,10 +259,10 @@
     </div>
 
     <!-- Input area -->
-    <div class="border-t border-stone-200 p-4">
+    <div class="border-t border-earth-300/60 p-4">
       {#if chatDisabled}
-        <div class="flex items-center justify-center gap-2 rounded-xl bg-stone-50 py-3 text-sm text-stone-500">
-          <span>🔒</span>
+        <div class="flex items-center justify-center gap-2 rounded-lg bg-earth-100 py-3 text-sm text-earth-600">
+          <svg class="icon w-4 h-4"><use href="/icons.svg#info"/></svg>
           <span>Pesanan sudah selesai. Chat tidak tersedia.</span>
         </div>
       {:else}
@@ -269,7 +272,7 @@
             onkeydown={handleKeydown}
             placeholder="Ketik pesan..."
             rows="1"
-            class="input-field min-h-[44px] resize-none"
+            class="input min-h-[44px] resize-none"
             disabled={sending}
           ></textarea>
           <button
@@ -281,7 +284,7 @@
             {sending ? '...' : 'Kirim'}
           </button>
         </div>
-        <p class="mt-1 text-xs text-stone-400">
+        <p class="mt-1 text-xs text-earth-600">
           Tekan Enter untuk kirim, Shift+Enter untuk baris baru
         </p>
       {/if}

@@ -131,69 +131,86 @@
   }
 </script>
 
-<div class="mx-auto max-w-4xl px-4 py-8">
-  <div class="flex items-center justify-between mb-8">
+<div class="page-container py-8">
+  <div class="page-header flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-stone-800">🏦 Kelola Rekening Bank</h1>
-      <p class="text-sm text-stone-500">Atur rekening bank untuk pembayaran manual (gratis)</p>
+      <h1 class="page-title flex items-center gap-2">
+        <svg class="icon w-6 h-6"><use href="/icons.svg#bank"/></svg>
+        Kelola Rekening Bank
+      </h1>
+      <p class="page-subtitle">Atur rekening bank untuk pembayaran manual (gratis)</p>
     </div>
-    <button onclick={openNew} class="btn-primary">+ Tambah Bank</button>
+    <button onclick={openNew} class="btn-primary btn-md">
+      <svg class="icon w-4 h-4"><use href="/icons.svg#bank"/></svg>
+      Tambah Bank
+    </button>
   </div>
 
   {#if loading}
     <div class="flex min-h-[30vh] items-center justify-center">
-      <p class="text-sm text-stone-400">Memuat...</p>
+      <div class="skeleton-card w-full max-w-md">
+        <div class="skeleton-text"></div>
+        <div class="skeleton-text"></div>
+        <div class="skeleton-text w-2/3"></div>
+      </div>
     </div>
   {:else}
     {#if formError}
-      <div class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{formError}</div>
+      <div class="alert-error mb-4">
+        <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#alert-circle"/></svg>
+        <span>{formError}</span>
+      </div>
     {/if}
     {#if formSuccess}
-      <div class="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">{formSuccess}</div>
+      <div class="alert-success mb-4">
+        <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#check"/></svg>
+        <span>{formSuccess}</span>
+      </div>
     {/if}
 
     <!-- Bank List -->
     <div class="space-y-4 mb-8">
       {#if banks.length === 0}
-        <div class="card text-center py-12">
-          <p class="text-4xl mb-3">🏦</p>
-          <p class="text-stone-500">Belum ada rekening bank.</p>
-          <p class="text-stone-400 text-sm mt-1">Tambahkan rekening bank untuk metode pembayaran manual.</p>
+        <div class="empty-state">
+          <svg class="empty-state-icon"><use href="/icons.svg#bank"/></svg>
+          <p class="empty-state-title">Belum ada rekening bank</p>
+          <p class="empty-state-desc">Tambahkan rekening bank untuk metode pembayaran manual.</p>
         </div>
       {:else}
         {#each banks as bank}
-          <div class="card flex items-center justify-between">
+          <div class="card p-4 flex items-center justify-between">
             <div class="flex items-center gap-4">
-              <span class="text-3xl">🏦</span>
+              <svg class="icon w-8 h-8 text-gold-500"><use href="/icons.svg#bank"/></svg>
               <div>
                 <div class="flex items-center gap-2">
-                  <h3 class="font-semibold text-stone-800">{bank.bank_name}</h3>
+                  <h3 class="font-semibold text-earth-800">{bank.bank_name}</h3>
                   {#if !bank.is_active}
-                    <span class="badge-stone text-xs">Nonaktif</span>
+                    <span class="badge-default text-xs">Nonaktif</span>
                   {/if}
                 </div>
-                <p class="text-sm text-stone-600 font-mono">{bank.account_number}</p>
-                <p class="text-xs text-stone-500">a.n. {bank.account_name}</p>
+                <p class="text-sm text-earth-700 font-mono">{bank.account_number}</p>
+                <p class="text-xs text-earth-600">a.n. {bank.account_name}</p>
               </div>
             </div>
             <div class="flex items-center gap-2">
               <button
                 onclick={() => toggleActive(bank)}
-                class="btn-secondary text-xs px-2 py-1"
+                class="btn-secondary btn-sm"
               >
                 {bank.is_active ? 'Nonaktifkan' : 'Aktifkan'}
               </button>
               <button
                 onclick={() => openEdit(bank)}
-                class="btn-secondary text-xs px-2 py-1"
+                class="btn-secondary btn-sm"
               >
-                ✏️ Edit
+                Edit
               </button>
               <button
                 onclick={() => handleDelete(bank.id)}
-                class="btn-danger text-xs px-2 py-1"
+                class="btn-danger btn-sm"
               >
-                🗑️
+                <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#x"/></svg>
+                Hapus
               </button>
             </div>
           </div>
@@ -204,40 +221,42 @@
     <!-- Add/Edit Form Modal -->
     {#if showForm}
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onclick={() => showForm = false}>
-        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onclick={(e) => e.stopPropagation()}>
+        <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-brand-xl animate-scale-in" onclick={(e) => e.stopPropagation()}>
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold text-stone-800">
+            <h2 class="text-lg font-bold font-display text-earth-900">
               {editingId ? 'Edit Rekening Bank' : 'Tambah Rekening Bank'}
             </h2>
-            <button onclick={() => showForm = false} class="text-stone-400 hover:text-stone-600 text-xl leading-none">&times;</button>
+            <button onclick={() => showForm = false} class="btn-ghost btn-sm">
+              <svg class="icon w-4 h-4"><use href="/icons.svg#x"/></svg>
+            </button>
           </div>
 
           <form onsubmit={handleSubmit}>
-            <label class="block text-sm font-medium text-stone-700 mb-1">Nama Bank</label>
-            <input type="text" class="input-field mb-3" bind:value={bankName} placeholder="e.g. BCA, Mandiri, BNI" required />
+            <label class="input-label">Nama Bank</label>
+            <input type="text" class="input mb-3" bind:value={bankName} placeholder="e.g. BCA, Mandiri, BNI" required />
 
-            <label class="block text-sm font-medium text-stone-700 mb-1">Nomor Rekening</label>
-            <input type="text" class="input-field mb-3" bind:value={accountNumber} placeholder="1234567890" required />
+            <label class="input-label">Nomor Rekening</label>
+            <input type="text" class="input mb-3" bind:value={accountNumber} placeholder="1234567890" required />
 
-            <label class="block text-sm font-medium text-stone-700 mb-1">Atas Nama</label>
-            <input type="text" class="input-field mb-3" bind:value={accountName} placeholder="Nama pemilik rekening" required />
+            <label class="input-label">Atas Nama</label>
+            <input type="text" class="input mb-3" bind:value={accountName} placeholder="Nama pemilik rekening" required />
 
             <div class="grid gap-4 sm:grid-cols-2">
               <div>
-                <label class="block text-sm font-medium text-stone-700 mb-1">Urutan</label>
-                <input type="number" class="input-field" bind:value={sortOrder} placeholder="0" />
+                <label class="input-label">Urutan</label>
+                <input type="number" class="input" bind:value={sortOrder} placeholder="0" />
               </div>
               <div class="flex items-end pb-2">
-                <label class="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
-                  <input type="checkbox" bind:checked={isActive} class="w-4 h-4 text-jelantah-500 rounded" />
+                <label class="flex items-center gap-2 text-sm text-earth-700 cursor-pointer">
+                  <input type="checkbox" bind:checked={isActive} class="w-4 h-4 text-gold-500 rounded" />
                   Aktif
                 </label>
               </div>
             </div>
 
             <div class="flex gap-3 mt-6">
-              <button type="button" onclick={() => showForm = false} class="btn-secondary flex-1">Batal</button>
-              <button type="submit" class="btn-primary flex-1" disabled={submitting}>
+              <button type="button" onclick={() => showForm = false} class="btn-secondary btn-md flex-1">Batal</button>
+              <button type="submit" class="btn-primary btn-md flex-1" disabled={submitting}>
                 {submitting ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Tambah Bank'}
               </button>
             </div>

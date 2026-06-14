@@ -146,16 +146,16 @@
 
   function statusBadge(status) {
     const map = {
-      available: 'badge-green',
-      claimed: 'badge-blue',
-      completed: 'badge-green',
-      cancelled: 'badge-red',
-      pending: 'badge-yellow',
-      confirmed: 'badge-blue',
-      picked_up: 'badge-green'
+      available: 'badge-success',
+      claimed: 'badge-info',
+      completed: 'badge-success',
+      cancelled: 'badge-danger',
+      pending: 'badge-warning',
+      confirmed: 'badge-info',
+      picked_up: 'badge-success'
     };
 
-    return map[status] || 'badge-stone';
+    return map[status] || 'badge-default';
   }
 
   function statusLabel(status) {
@@ -197,100 +197,119 @@
   }
 </script>
 
-<div class="mx-auto max-w-4xl px-4 py-8">
+<div class="page-container py-8">
   <a
     href="/dashboard/umkm"
-    class="mb-4 inline-block text-sm text-jelantah-600 hover:text-jelantah-700"
+    class="nav-link mb-4 inline-flex"
   >
-    ← Kembali ke Dashboard
+    <svg class="icon w-4 h-4"><use href="/icons.svg#arrow-right"/></svg>
+    <span>Kembali ke Dashboard</span>
   </a>
 
-  <h1 class="mb-6 text-xl font-bold text-stone-800">Riwayat & Listing</h1>
+  <h1 class="page-title mb-6">Riwayat & Listing</h1>
 
   <div class="mb-6 grid gap-3 sm:grid-cols-3">
-    <div class="card">
-      <p class="text-xs text-stone-500">Total Jelantah Tersalurkan</p>
-      <p class="mt-1 text-2xl font-bold text-stone-800">{totalLiters} L</p>
-      <p class="mt-1 text-xs text-stone-400">Dihitung dari pickup yang selesai</p>
+    <div class="stat">
+      <p class="stat-label">Total Jelantah Tersalurkan</p>
+      <p class="stat-value">{totalLiters} L</p>
+      <p class="text-xs text-earth-500 mt-1">Dihitung dari pickup yang selesai</p>
     </div>
 
-    <div class="card">
-      <p class="text-xs text-stone-500">Total Cuan</p>
-      <p class="mt-1 text-2xl font-bold text-jelantah-700">{formatRupiah(totalCuan)}</p>
-      <p class="mt-1 text-xs text-stone-400">Estimasi hasil penyaluran jelantah</p>
+    <div class="stat">
+      <p class="stat-label">Total Cuan</p>
+      <p class="stat-value stat-accent">{formatRupiah(totalCuan)}</p>
+      <p class="text-xs text-earth-500 mt-1">Estimasi hasil penyaluran jelantah</p>
     </div>
 
-    <a href="/dashboard/umkm/points" class="card block hover:shadow-md transition-shadow">
-      <p class="text-xs text-stone-500">🏆 Kupon Poin</p>
-      <p class="mt-1 text-2xl font-bold text-yellow-600">{pointsBalance.toLocaleString('id-ID')} poin</p>
-      <p class="mt-1 text-xs text-stone-400">1 liter = 10 poin • Klik untuk tukar →</p>
+    <a href="/dashboard/umkm/points" class="stat block hover:shadow-brand-md transition-all duration-200">
+      <p class="stat-label flex items-center gap-1">
+        <svg class="icon w-3.5 h-3.5 text-gold-500"><use href="/icons.svg#award"/></svg>
+        Kupon Poin
+      </p>
+      <p class="stat-value" style="color: #D4A40D;">{pointsBalance.toLocaleString('id-ID')} poin</p>
+      <p class="text-xs text-earth-500 mt-1">1 liter = 10 poin • Klik untuk tukar</p>
     </a>
   </div>
 
-  <a href="/dashboard/umkm/points" class="card mb-6 block bg-gradient-to-br from-green-50 to-yellow-50 hover:shadow-md transition-shadow">
+  <a href="/dashboard/umkm/points" class="card-hover mb-6 block p-5 bg-gradient-to-br from-herb-100 to-gold-100">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p class="text-sm font-semibold text-jelantah-700">🏆 Kupon Poin — Tukarkan Hadiah!</p>
-        <h2 class="mt-1 text-lg font-bold text-stone-800">Kumpulkan poin, tukar jadi hadiah</h2>
-        <p class="mt-1 text-sm text-stone-600">
+        <p class="text-sm font-semibold text-gold-700 flex items-center gap-1">
+          <svg class="icon w-4 h-4"><use href="/icons.svg#award"/></svg>
+          Kupon Poin — Tukarkan Hadiah!
+        </p>
+        <h2 class="mt-1 text-lg font-bold text-earth-900">Kumpulkan poin, tukar jadi hadiah</h2>
+        <p class="mt-1 text-sm text-earth-700">
           Setiap transaksi memberimu poin kupon yang bisa ditukar dengan berbagai hadiah menarik.
           Klik di sini untuk lihat katalog!
         </p>
       </div>
 
       <div class="flex gap-2 shrink-0">
-        <span class="btn-primary px-3 py-2 text-xs pointer-events-none">
-          Lihat Hadiah →
+        <span class="btn-primary btn-sm pointer-events-none">
+          Lihat Hadiah
+          <svg class="icon w-3 h-3"><use href="/icons.svg#arrow-right"/></svg>
         </span>
       </div>
     </div>
   </a>
 
-  <div class="relative z-20 mb-6 flex gap-2">
+  <div class="relative z-20 mb-6 flex gap-1 bg-earth-200 rounded-lg p-1">
     <button onclick={() => setTab('listings')}
-      class={`rounded-lg px-4 py-2 text-sm ${tab === 'listings' ? 'bg-jelantah-100 font-semibold text-jelantah-700' : 'text-stone-500 hover:bg-stone-100'}`}>
-      📋 Listing
+      class="btn-ghost btn-sm {tab === 'listings' ? 'nav-link-active' : ''}">
+      <svg class="icon w-4 h-4"><use href="/icons.svg#menu"/></svg>
+      Listing
     </button>
     <button onclick={() => setTab('orders')}
-      class={`rounded-lg px-4 py-2 text-sm ${tab === 'orders' ? 'bg-jelantah-100 font-semibold text-jelantah-700' : 'text-stone-500 hover:bg-stone-100'}`}>
-      📦 Pesanan
+      class="btn-ghost btn-sm {tab === 'orders' ? 'nav-link-active' : ''}">
+      <svg class="icon w-4 h-4"><use href="/icons.svg#package"/></svg>
+      Pesanan
     </button>
     <button onclick={() => setTab('payments')}
-      class={`rounded-lg px-4 py-2 text-sm ${tab === 'payments' ? 'bg-jelantah-100 font-semibold text-jelantah-700' : 'text-stone-500 hover:bg-stone-100'}`}>
-      💰 Pembayaran Masuk
+      class="btn-ghost btn-sm {tab === 'payments' ? 'nav-link-active' : ''}">
+      <svg class="icon w-4 h-4"><use href="/icons.svg#credit-card"/></svg>
+      Pembayaran Masuk
     </button>
   </div>
 
   {#if loading}
-    <p class="text-sm text-stone-400">Memuat...</p>
+    <div class="skeleton-card">
+      <div class="skeleton-text"></div>
+      <div class="skeleton-text"></div>
+    </div>
   {:else if tab === 'listings'}
     {#if listingMarkers.length > 0}
-      <div class="card mb-4 p-2">
+      <div class="card p-2 mb-4">
         <Map markers={listingMarkers} height="280px" zoom={12} />
       </div>
     {/if}
 
-    <div class="card">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="font-semibold text-stone-800">Semua Listing ({listings.length})</h2>
-        <a href="/dashboard/umkm/listing" class="text-sm text-jelantah-600 hover:text-jelantah-700">
-          + Baru
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-earth-900">Semua Listing ({listings.length})</h2>
+        <a href="/dashboard/umkm/listing" class="btn-primary btn-sm">
+          <svg class="icon w-3 h-3"><use href="/icons.svg#package"/></svg>
+          Baru
         </a>
       </div>
 
       {#if listings.length === 0}
-        <p class="text-sm text-stone-400">Belum ada listing.</p>
+        <div class="empty-state py-8">
+          <svg class="empty-state-icon"><use href="/icons.svg#package"/></svg>
+          <p class="empty-state-title">Belum ada listing</p>
+          <p class="empty-state-desc">Buat listing baru untuk menjual jelantah.</p>
+        </div>
       {:else}
-        <div class="divide-y divide-stone-100">
+        <div class="divide-y divide-earth-300/50">
           {#each listings as listing}
             <div class="flex items-center justify-between py-3">
               <div>
-                <p class="text-sm font-medium text-stone-800">
+                <p class="text-sm font-medium text-earth-800">
                   {listing.quantity_liters}L @ Rp {Number(listing.price_per_liter).toLocaleString(
                     'id-ID'
                   )}/L
                 </p>
-                <p class="text-xs text-stone-500">
+                <p class="text-xs text-earth-600">
                   {listing.city || listing.pickup_address?.slice(0, 30)}
                   •
                   {new Date(listing.created_at).toLocaleDateString('id-ID')}
@@ -306,22 +325,26 @@
       {/if}
     </div>
   {:else if tab === 'orders'}
-    <div class="card">
-      <h2 class="mb-4 font-semibold text-stone-800">Riwayat Pesanan ({orders.length})</h2>
+    <div class="card p-5">
+      <h2 class="font-semibold text-earth-900 mb-4">Riwayat Pesanan ({orders.length})</h2>
 
       {#if orders.length === 0}
-        <p class="text-sm text-stone-400">Belum ada pesanan.</p>
+        <div class="empty-state py-8">
+          <svg class="empty-state-icon"><use href="/icons.svg#package"/></svg>
+          <p class="empty-state-title">Belum ada pesanan</p>
+          <p class="empty-state-desc">Tunggu hingga ada perusahaan yang memesan listing Anda.</p>
+        </div>
       {:else}
-        <div class="divide-y divide-stone-100">
+        <div class="divide-y divide-earth-300/50">
           {#each orders as order}
             <div class="py-4">
               <div class="flex items-start justify-between gap-4">
                 <div>
-                  <p class="text-sm font-medium text-stone-800">
+                  <p class="text-sm font-medium text-earth-800">
                     Pesanan #{order.id.slice(0, 8)} — {order.requested_liters}L
                   </p>
 
-                  <p class="text-xs text-stone-500">
+                  <p class="text-xs text-earth-600">
                     {new Date(order.created_at).toLocaleDateString('id-ID', {
                       weekday: 'long',
                       year: 'numeric',
@@ -334,7 +357,7 @@
                   </p>
 
                   {#if order.oil_listings}
-                    <p class="mt-1 text-xs text-stone-500">
+                    <p class="mt-1 text-xs text-earth-600">
                       Total estimasi:
                       {formatRupiah(
                         Number(order.requested_liters || 0) *
@@ -350,26 +373,17 @@
               </div>
 
               {#if order.status !== 'cancelled'}
-                <div class="mt-4 rounded-2xl bg-stone-50 p-4">
-                  <div class="grid grid-cols-4 gap-2">
+                <div class="card-flat p-4 mt-4">
+                  <div class="step-tracker">
                     {#each trackingSteps as step, index}
-                      <div class="text-center">
+                      <div class="step-item">
                         <div
-                          class={`mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                            index <= stepIndex(order.status)
-                              ? 'bg-jelantah-600 text-white'
-                              : 'bg-stone-200 text-stone-500'
-                          }`}
+                          class="step-circle {index <= stepIndex(order.status) ? 'step-circle-active' : 'step-circle-inactive'}"
                         >
                           {index + 1}
                         </div>
-
                         <p
-                          class={`text-[11px] ${
-                            index <= stepIndex(order.status)
-                              ? 'font-semibold text-jelantah-700'
-                              : 'text-stone-400'
-                          }`}
+                          class="step-label {index <= stepIndex(order.status) ? 'step-label-active' : 'step-label-inactive'}"
                         >
                           {step.label}
                         </p>
@@ -378,8 +392,9 @@
                   </div>
                 </div>
               {:else}
-                <div class="mt-3 rounded-lg bg-red-50 p-3 text-xs text-red-700">
-                  Pickup ini telah dibatalkan.
+                <div class="alert-danger mt-3">
+                  <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#alert-circle"/></svg>
+                  <span>Pickup ini telah dibatalkan.</span>
                 </div>
               {/if}
 
@@ -387,11 +402,11 @@
               {#if order.status === 'completed' && transactionsMap[order.id]}
                 {@const tx = transactionsMap[order.id]}
                 <div class="mt-4 flex justify-center">
-                  <div class="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800 ring-1 ring-green-200">
-                    <span class="text-lg">💰</span>
+                  <div class="alert-success w-full">
+                    <svg class="icon w-5 h-5 mt-0.5 flex-shrink-0"><use href="/icons.svg#check"/></svg>
                     <div class="text-center">
                       <p class="font-semibold">Pembayaran Telah Dikonfirmasi</p>
-                      <p class="text-xs text-green-600">
+                      <p class="text-xs text-herb-600">
                         {formatRupiah(tx.total_price)} —
                         {new Date(tx.completed_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                       </p>
@@ -403,9 +418,10 @@
               <div class="mt-3">
                 <button
                   onclick={() => (chatOrderId = order.id)}
-                  class="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1"
                 >
-                  💬 Chat
+                  <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#message-circle"/></svg>
+                  Chat
                 </button>
               </div>
             </div>
@@ -414,37 +430,44 @@
       {/if}
     </div>
   {:else if tab === 'payments'}
-    <div class="card">
+    <div class="card p-5">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="font-semibold text-stone-800">💰 Pembayaran Masuk</h2>
+        <h2 class="font-semibold text-earth-900 flex items-center gap-1">
+          <svg class="icon w-4 h-4"><use href="/icons.svg#credit-card"/></svg>
+          Pembayaran Masuk
+        </h2>
         <div class="text-right">
-          <p class="text-xs text-stone-500">Total Diterima</p>
-          <p class="text-lg font-bold text-green-600">{formatRupiah(totalReceived)}</p>
+          <p class="text-xs text-earth-600">Total Diterima</p>
+          <p class="text-lg font-bold text-herb-600">{formatRupiah(totalReceived)}</p>
         </div>
       </div>
 
       {#if incomingPayments.length === 0}
-        <p class="text-sm text-stone-400 text-center py-8">Belum ada pembayaran masuk.</p>
+        <div class="empty-state py-8">
+          <svg class="empty-state-icon"><use href="/icons.svg#credit-card"/></svg>
+          <p class="empty-state-title">Belum ada pembayaran masuk</p>
+          <p class="empty-state-desc">Pembayaran muncul setelah Perusahaan mengkonfirmasi.</p>
+        </div>
       {:else}
         <div class="space-y-3">
           {#each incomingPayments as p}
-            <div class="flex items-center justify-between border-b border-stone-100 pb-3 last:border-0 last:pb-0">
+            <div class="flex items-center justify-between border-b border-earth-300/50 pb-3 last:border-0 last:pb-0">
               <div>
                 <div class="flex items-center gap-2">
-                  <span>🏦</span>
-                  <p class="text-sm font-medium text-stone-800">
+                  <svg class="icon w-4 h-4 text-earth-600"><use href="/icons.svg#bank"/></svg>
+                  <p class="text-sm font-medium text-earth-800">
                     Pembayaran via {p.payment_banks?.bank_name || 'Bank'}
                   </p>
                 </div>
-                <p class="text-xs text-stone-500 mt-1">
+                <p class="text-xs text-earth-600 mt-1">
                   {p.sender_name || 'Perusahaan'} • {new Date(p.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })}
                 </p>
                 {#if p.notes}
-                  <p class="text-xs text-stone-400 mt-0.5">{p.notes}</p>
+                  <p class="text-xs text-earth-500 mt-0.5">{p.notes}</p>
                 {/if}
               </div>
               <div class="text-right">
-                <p class="text-sm font-bold text-green-600">{formatRupiah(p.amount)}</p>
+                <p class="text-sm font-bold text-herb-600">{formatRupiah(p.amount)}</p>
                 <span class="{statusBadge(p.status)} text-xs mt-1 inline-block">{p.status}</span>
               </div>
             </div>
@@ -457,63 +480,56 @@
 
 {#if showRewardModal}
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-    <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+    <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-brand-lg animate-scale-in">
       <div class="mb-5 flex items-start justify-between gap-4">
         <div>
-          <p class="text-sm font-semibold text-jelantah-600">Reward Jelantahin</p>
-          <h2 class="text-xl font-bold text-stone-800">Tukar Poin Reward</h2>
-          <p class="mt-1 text-sm text-stone-500">
+          <p class="text-sm font-semibold text-gold-600">Reward Jelantahin</p>
+          <h2 class="text-xl font-bold text-earth-900">Tukar Poin Reward</h2>
+          <p class="mt-1 text-sm text-earth-600">
             Kamu memiliki
-            <span class="font-semibold text-yellow-600">{pointsBalance.toLocaleString('id-ID')} poin</span>.
+            <span class="font-semibold text-gold-600">{pointsBalance.toLocaleString('id-ID')} poin</span>.
           </p>
         </div>
 
         <button
           type="button"
           onclick={closeRewardModal}
-          class="rounded-lg px-3 py-1 text-sm text-stone-500 hover:bg-stone-100"
+          class="btn-ghost btn-sm"
         >
-          ✕
+          <svg class="icon w-4 h-4"><use href="/icons.svg#x"/></svg>
         </button>
       </div>
 
       {#if rewardMessage}
         <div
-          class={`mb-4 rounded-lg p-3 text-sm ${
-            rewardMessage.includes('berhasil')
-              ? 'bg-green-50 text-green-700'
-              : 'bg-yellow-50 text-yellow-700'
-          }`}
+          class="mb-4 rounded-lg p-3 text-sm {rewardMessage.includes('berhasil')
+            ? 'alert-success'
+            : 'alert-warning'}"
         >
-          {rewardMessage}
+          <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0">
+            <use href="/icons.svg#{rewardMessage.includes('berhasil') ? 'check' : 'alert-circle'}"/>
+          </svg>
+          <span>{rewardMessage}</span>
         </div>
       {/if}
 
       <div class="grid gap-3">
         {#each rewardOptions as reward}
-          <div class="rounded-xl border border-stone-200 p-4">
+          <div class="card-hover p-4">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div class="flex flex-wrap items-center gap-2">
-                  <h3 class="font-semibold text-stone-800">{reward.title}</h3>
+                  <h3 class="font-semibold text-earth-800">{reward.title}</h3>
 
                   {#if reward.type === 'certificate'}
-                    <span
-                      class="rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700"
-                    >
-                      Sertifikat
-                    </span>
+                    <span class="badge-success">Sertifikat</span>
                   {:else}
-                    <span
-                      class="rounded-full bg-yellow-50 px-2 py-0.5 text-[11px] font-semibold text-yellow-700"
-                    >
-                      Voucher
-                    </span>
+                    <span class="badge-warning">Voucher</span>
                   {/if}
                 </div>
 
-                <p class="mt-1 text-sm text-stone-500">{reward.description}</p>
-                <p class="mt-2 text-xs font-semibold text-stone-600">
+                <p class="mt-1 text-sm text-earth-600">{reward.description}</p>
+                <p class="mt-2 text-xs font-semibold text-earth-700">
                   Butuh {reward.points} poin
                 </p>
               </div>
@@ -521,11 +537,7 @@
               <button
                 type="button"
                 onclick={() => redeemReward(reward)}
-                class={`rounded-lg px-4 py-2 text-xs font-semibold ${
-                  pointsBalance >= reward.points
-                    ? 'bg-jelantah-600 text-white hover:bg-jelantah-700'
-                    : 'bg-stone-100 text-stone-400'
-                }`}
+                class="btn-sm {pointsBalance >= reward.points ? 'btn-primary' : 'btn-secondary'} "
               >
                 {pointsBalance >= reward.points ? 'Tukar' : 'Poin Kurang'}
               </button>
@@ -534,13 +546,17 @@
         {/each}
       </div>
 
-      <div class="mt-5 rounded-xl bg-green-50 p-4 text-sm text-stone-600">
-        <p class="font-semibold text-jelantah-700">Catatan Prototype</p>
-        <p class="mt-1">
-          Pada versi prototype, penukaran reward belum disimpan ke database. Fitur ini
-          dibuat untuk menunjukkan alur bahwa poin dari penyaluran minyak jelantah dapat
-          ditukar menjadi voucher atau sertifikat kontribusi lingkungan.
-        </p>
+      <div class="divider"></div>
+      <div class="alert-info">
+        <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#info"/></svg>
+        <div>
+          <p class="font-semibold text-gold-700">Catatan Prototype</p>
+          <p class="mt-1">
+            Pada versi prototype, penukaran reward belum disimpan ke database. Fitur ini
+            dibuat untuk menunjukkan alur bahwa poin dari penyaluran minyak jelantah dapat
+            ditukar menjadi voucher atau sertifikat kontribusi lingkungan.
+          </p>
+        </div>
       </div>
     </div>
   </div>

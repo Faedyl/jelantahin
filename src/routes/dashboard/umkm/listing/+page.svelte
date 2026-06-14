@@ -179,68 +179,64 @@
 </script>
 
 {#if loading}
-  <div class="mx-auto max-w-lg px-4 py-8">
-    <p class="text-sm text-stone-500">Memuat data...</p>
+  <div class="page-container py-8">
+    <p class="text-sm text-earth-600">Memuat data...</p>
   </div>
 {:else}
-  <div class="mx-auto max-w-2xl px-4 py-8">
+  <div class="page-container py-8">
     <a
       href="/dashboard/umkm"
-      class="mb-4 inline-block text-sm text-jelantah-600 hover:text-jelantah-700"
+      class="mb-4 inline-block text-sm text-gold-600 hover:text-gold-700"
     >
       ← Kembali ke Dashboard
     </a>
 
-    <div class="card overflow-hidden">
-      <div class="mb-6 rounded-2xl bg-gradient-to-br from-jelantah-600 to-jelantah-800 p-5">
-        <p class="text-sm font-semibold text-jelantah-200">Jelantahin</p>
+    <div class="card p-4 sm:p-6">
+      <div class="mb-6 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 rounded-t-lg bg-gradient-to-br from-gold-600 to-gold-800 p-5">
+        <p class="text-sm font-semibold text-gold-200">Jelantahin</p>
         <h1 class="mt-1 text-2xl font-bold text-white">Ajukan Pickup Jelantah</h1>
-        <p class="mt-1 text-sm text-jelantah-200">Jelantahmu, cuanmu.</p>
+        <p class="mt-1 text-sm text-gold-200">Jelantahmu, cuanmu.</p>
       </div>
 
       {#if error}
-        <div class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
+        <div class="alert-error mb-4">{error}</div>
       {/if}
 
       {#if success}
-        <div class="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
-          {success}
-        </div>
+        <div class="alert-success mb-4">{success}</div>
       {/if}
 
       <form onsubmit={handleSubmit}>
         <div class="mb-4">
-          <label class="mb-1 block text-sm font-medium text-stone-700">
+          <label class="input-label">
             Jumlah minyak jelantah *
           </label>
           <input
             type="number"
             step="0.1"
             min="0.1"
-            class="input-field"
+            class="input"
             bind:value={quantity}
             placeholder="Contoh: 10"
             required
           />
-          <p class="mt-1 text-xs text-stone-500">
+          <p class="input-hint">
             Masukkan jumlah minyak jelantah dalam satuan liter.
           </p>
         </div>
 
         <div class="mb-4">
-          <label class="mb-2 block text-sm font-medium text-stone-700">
+          <label class="input-label mb-2">
             Kondisi minyak jelantah *
           </label>
 
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <button
               type="button"
-              class={`rounded-xl border p-3 text-left text-sm transition ${
+              class={`rounded-lg border p-3 text-left text-sm transition ${
                 condition === 'minim_ampas'
-                  ? 'border-jelantah-600 bg-green-50 text-jelantah-700'
-                  : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                  ? 'border-gold-600 bg-herb-100 text-gold-700'
+                  : 'border-earth-300/60 bg-white text-earth-700 hover:bg-earth-100'
               }`}
               onclick={() => (condition = 'minim_ampas')}
             >
@@ -250,10 +246,10 @@
 
             <button
               type="button"
-              class={`rounded-xl border p-3 text-left text-sm transition ${
+              class={`rounded-lg border p-3 text-left text-sm transition ${
                 condition === 'ada_ampas'
-                  ? 'border-jelantah-600 bg-green-50 text-jelantah-700'
-                  : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                  ? 'border-gold-600 bg-herb-100 text-gold-700'
+                  : 'border-earth-300/60 bg-white text-earth-700 hover:bg-earth-100'
               }`}
               onclick={() => (condition = 'ada_ampas')}
             >
@@ -263,10 +259,10 @@
 
             <button
               type="button"
-              class={`rounded-xl border p-3 text-left text-sm transition ${
+              class={`rounded-lg border p-3 text-left text-sm transition ${
                 condition === 'tercampur_air'
-                  ? 'border-jelantah-600 bg-green-50 text-jelantah-700'
-                  : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                  ? 'border-gold-600 bg-herb-100 text-gold-700'
+                  : 'border-earth-300/60 bg-white text-earth-700 hover:bg-earth-100'
               }`}
               onclick={() => (condition = 'tercampur_air')}
             >
@@ -276,44 +272,44 @@
           </div>
         </div>
 
-        <div class="mb-4 rounded-2xl bg-green-50 p-4">
-          <div class="flex items-center justify-between text-sm text-stone-600">
+        <div class="mb-4 rounded-lg bg-herb-100 p-4">
+          <div class="flex items-center justify-between text-sm text-earth-700">
             <span>Harga estimasi per liter</span>
-            <span class="font-semibold text-stone-800">{formatRupiah(pricePerLiter)}</span>
+            <span class="font-semibold text-earth-900">{formatRupiah(pricePerLiter)}</span>
           </div>
 
-          <div class="mt-3 flex items-center justify-between border-t border-green-100 pt-3">
-            <span class="text-sm font-semibold text-stone-700">Total estimasi cuan</span>
-            <span class="text-xl font-bold text-jelantah-700">{formatRupiah(totalEstimate)}</span>
+          <div class="mt-3 flex items-center justify-between border-t border-herb-200 pt-3">
+            <span class="text-sm font-semibold text-earth-800">Total estimasi cuan</span>
+            <span class="text-xl font-bold text-gold-700">{formatRupiah(totalEstimate)}</span>
           </div>
         </div>
 
         <div class="mb-4">
-          <label class="mb-1 block text-sm font-medium text-stone-700">
+          <label class="input-label">
             Upload foto minyak
           </label>
           <input
             type="file"
             accept="image/*"
-            class="input-field"
+            class="input"
             onchange={handleFileChange}
           />
 
           {#if selectedFileName}
-            <p class="mt-1 text-xs text-green-700">Foto dipilih: {selectedFileName}</p>
+            <p class="mt-1 text-xs text-herb-700">Foto dipilih: {selectedFileName}</p>
           {:else}
-            <p class="mt-1 text-xs text-stone-500">
+            <p class="input-hint">
               Untuk prototype, foto hanya disimpan sebagai nama file.
             </p>
           {/if}
         </div>
 
         <div class="mb-4">
-          <label class="mb-1 block text-sm font-medium text-stone-700">
+          <label class="input-label">
             Alamat pickup *
           </label>
           <textarea
-            class="input-field"
+            class="input"
             bind:value={pickupAddress}
             placeholder="Masukkan alamat lengkap penjemputan"
             rows="2"
@@ -324,11 +320,11 @@
         <!-- Map location picker -->
         <div class="mb-4">
           <div class="flex items-center justify-between mb-2">
-            <label class="block text-sm font-medium text-stone-700">Lokasi di Peta</label>
+            <label class="input-label">Lokasi di Peta</label>
             <button
               type="button"
               onclick={() => showMap = !showMap}
-              class="text-xs text-jelantah-600 hover:text-jelantah-700"
+              class="text-xs text-gold-600 hover:text-gold-700"
             >
               {showMap ? 'Sembunyikan peta' : 'Tandai di peta'}
             </button>
@@ -347,18 +343,20 @@
           {/if}
 
           {#if geocoding}
-            <p class="text-xs text-jelantah-600 flex items-center gap-1">
-              <span>⏳ Mengambil alamat dari lokasi peta...</span>
+            <p class="text-xs text-gold-600 flex items-center gap-1">
+              <svg class="icon w-4 h-4 icon-spin text-gold-500"><use href="/icons.svg#loader"/></svg>
+              <span>Mengambil alamat dari lokasi peta...</span>
             </p>
           {:else if latitude != null && longitude != null}
-            <p class="text-xs text-green-700 flex items-center gap-1">
-              <span>✅ Lokasi ditandai</span>
-              <span class="text-stone-400">
+            <p class="text-xs text-herb-700 flex items-center gap-1">
+              <svg class="icon w-4 h-4 text-herb-500"><use href="/icons.svg#check"/></svg>
+              Lokasi ditandai
+              <span class="text-earth-600">
                 ({latitude.toFixed(5)}, {longitude.toFixed(5)})
               </span>
             </p>
           {:else if !showMap}
-            <p class="text-xs text-stone-400">
+            <p class="text-xs text-earth-600">
               Klik "Tandai di peta" untuk menentukan lokasi penjemputan.
             </p>
           {/if}
@@ -366,22 +364,22 @@
 
         <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label class="mb-1 block text-sm font-medium text-stone-700">Kota</label>
+            <label class="input-label">Kota</label>
             <input
               type="text"
-              class="input-field"
+              class="input"
               bind:value={city}
               placeholder="Contoh: Samarinda"
             />
           </div>
 
           <div>
-            <label class="mb-1 block text-sm font-medium text-stone-700">
+            <label class="input-label">
               Jadwal pickup *
             </label>
             <input
               type="date"
-              class="input-field"
+              class="input"
               bind:value={pickupDate}
               required
             />
@@ -389,21 +387,21 @@
         </div>
 
         <div class="mb-6">
-          <label class="mb-1 block text-sm font-medium text-stone-700">
+          <label class="input-label">
             Catatan negosiasi harga
           </label>
           <textarea
-            class="input-field"
+            class="input"
             bind:value={negotiationNote}
             placeholder="Contoh: Harga bisa dinego jika pickup dilakukan hari ini."
             rows="3"
           ></textarea>
-          <p class="mt-1 text-xs text-stone-500">
+          <p class="input-hint">
             Bagian ini menjadi versi prototype dari fitur chat diskusi harga dengan pengolah.
           </p>
         </div>
 
-        <button type="submit" class="btn-primary w-full" disabled={submitting}>
+        <button type="submit" class="btn-primary btn-lg w-full" disabled={submitting}>
           {submitting ? 'Mengajukan...' : 'Ajukan Pickup'}
         </button>
       </form>

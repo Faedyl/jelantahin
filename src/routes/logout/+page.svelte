@@ -10,5 +10,5 @@
 </script>
 
 <div class="flex min-h-[50vh] items-center justify-center">
-  <p class="text-stone-500">Logging out...</p>
+  <p class="text-earth-600">Logging out...</p>
 </div>

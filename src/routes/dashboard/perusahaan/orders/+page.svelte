@@ -153,14 +153,14 @@
 
   function statusBadge(s) {
     const map = {
-      pending: 'badge-yellow',
-      confirmed: 'badge-blue',
-      picked_up: 'badge-green',
-      completed: 'badge-green',
-      cancelled: 'badge-red'
+      pending: 'badge-warning',
+      confirmed: 'badge-info',
+      picked_up: 'badge-success',
+      completed: 'badge-success',
+      cancelled: 'badge-danger'
     };
 
-    return map[s] || 'badge-stone';
+    return map[s] || 'badge-default';
   }
 
   function statusLabel(s) {
@@ -208,59 +208,71 @@
   }
 </script>
 
-<div class="mx-auto max-w-4xl px-4 py-8">
-  <a
-    href="/dashboard/perusahaan"
-    class="mb-4 inline-block text-sm text-jelantah-600 hover:text-jelantah-700"
-  >
-    ← Kembali ke Dashboard
+<div class="page-container py-8">
+  <!-- Back link -->
+  <a href="/dashboard/perusahaan" class="nav-link mb-4 inline-flex">
+    <svg class="icon w-4 h-4"><use href="/icons.svg#arrow-right"/></svg>
+    <span>Kembali ke Dashboard</span>
   </a>
 
-  <div class="mb-6">
-    <p class="text-sm font-semibold text-jelantah-600">Jelantahin</p>
-    <h1 class="text-2xl font-bold text-stone-800">Tracking Pickup Minyak</h1>
-    <p class="text-sm text-stone-500">
-      Pantau dan ubah status pickup minyak jelantah dari UMKM.
+  <!-- Page Header -->
+  <div class="page-header">
+    <p class="text-sm font-semibold text-gold-600 flex items-center gap-1">
+      <svg class="icon w-4 h-4"><use href="/icons.svg#olive-drop"/></svg>
+      Jelantahin
     </p>
+    <h1 class="page-title">Tracking Pickup Minyak</h1>
+    <p class="page-subtitle">Pantau dan ubah status pickup minyak jelantah dari UMKM.</p>
   </div>
 
   {#if error}
-    <div class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-      {error}
+    <div class="alert-error mb-4">
+      <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#alert-circle"/></svg>
+      <span>{error}</span>
     </div>
   {/if}
 
   {#if loading}
-    <p class="text-sm text-stone-400">Memuat...</p>
+    <div class="skeleton-card">
+      <div class="skeleton-text"></div>
+      <div class="skeleton-text"></div>
+      <div class="skeleton-text w-2/3"></div>
+    </div>
   {:else if orders.length === 0}
-    <div class="card py-12 text-center">
-      <p class="text-stone-400">Belum ada pesanan pickup.</p>
+    <div class="empty-state">
+      <svg class="empty-state-icon"><use href="/icons.svg#package"/></svg>
+      <p class="empty-state-title">Belum ada pesanan pickup</p>
+      <p class="empty-state-desc">Cari permintaan pickup yang tersedia untuk memulai.</p>
       <a
         href="/dashboard/perusahaan/browse"
-        class="mt-2 inline-block text-sm text-jelantah-600 hover:text-jelantah-700"
+        class="btn-primary btn-md mt-4"
       >
-        Cari permintaan pickup →
+        <svg class="icon w-4 h-4"><use href="/icons.svg#search"/></svg>
+        Cari permintaan pickup
       </a>
     </div>
   {:else}
     <!-- Overview map for active pickups with coordinates -->
     {#if activeOrdersMap.length > 0}
       <div class="card p-2 mb-6">
-        <h2 class="text-sm font-semibold text-stone-800 mb-2 px-2">📍 Lokasi Pickup Aktif</h2>
+        <h2 class="text-sm font-semibold font-display text-earth-900 mb-2 px-2 flex items-center gap-1">
+          <svg class="icon w-4 h-4"><use href="/icons.svg#map-pin"/></svg>
+          Lokasi Pickup Aktif
+        </h2>
         <Map markers={activeOrdersMap} height="300px" zoom={11} />
       </div>
     {/if}
 
     <div class="space-y-4">
       {#each orders as order}
-        <div class="card">
-          <div class="mb-4 flex items-start justify-between gap-4">
+        <div class="order-card">
+          <div class="order-card-header">
             <div>
-              <p class="font-semibold text-stone-800">
+              <p class="order-card-title">
                 Pickup {order.requested_liters}L — {order.oil_listings?.city || 'Alamat UMKM'}
               </p>
-
-              <p class="text-xs text-stone-500">
+              <p class="order-card-meta flex items-center gap-1">
+                <svg class="icon w-3 h-3"><use href="/icons.svg#clock-rotate"/></svg>
                 #{order.id.slice(0, 8)} • Dibuat
                 {new Date(order.created_at).toLocaleDateString('id-ID', {
                   weekday: 'long',
@@ -269,40 +281,30 @@
                   day: 'numeric'
                 })}
               </p>
-
               {#if order.pickup_date}
-                <p class="text-xs text-stone-500">
+                <p class="order-card-meta flex items-center gap-1">
+                  <svg class="icon w-3 h-3"><use href="/icons.svg#calendar"/></svg>
                   Jadwal pickup: {new Date(order.pickup_date).toLocaleDateString('id-ID')}
                 </p>
               {/if}
             </div>
-
             <span class={statusBadge(order.status)}>
               {statusLabel(order.status)}
             </span>
           </div>
 
           {#if order.status !== 'cancelled'}
-            <div class="mb-4 rounded-2xl bg-stone-50 p-4">
-              <div class="grid grid-cols-4 gap-2">
+            <div class="card-flat p-4 mb-4">
+              <div class="step-tracker">
                 {#each trackingSteps as step, index}
-                  <div class="text-center">
+                  <div class="step-item">
                     <div
-                      class={`mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                        index <= stepIndex(order.status)
-                          ? 'bg-jelantah-600 text-white'
-                          : 'bg-stone-200 text-stone-500'
-                      }`}
+                      class="step-circle {index <= stepIndex(order.status) ? 'step-circle-active' : 'step-circle-inactive'}"
                     >
                       {index + 1}
                     </div>
-
                     <p
-                      class={`text-[11px] ${
-                        index <= stepIndex(order.status)
-                          ? 'font-semibold text-jelantah-700'
-                          : 'text-stone-400'
-                      }`}
+                      class="step-label {index <= stepIndex(order.status) ? 'step-label-active' : 'step-label-inactive'}"
                     >
                       {step.label}
                     </p>
@@ -316,11 +318,11 @@
           {#if order.status === 'completed' && transactionsMap[order.id]}
             {@const tx = transactionsMap[order.id]}
             <div class="mb-4 flex justify-center">
-              <div class="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800 ring-1 ring-green-200">
-                <span class="text-lg">💰</span>
-                <div class="text-center">
+              <div class="alert-success w-full">
+                <svg class="icon w-5 h-5 mt-0.5 flex-shrink-0"><use href="/icons.svg#check"/></svg>
+                <div>
                   <p class="font-semibold">Pembayaran Telah Dikonfirmasi</p>
-                  <p class="text-xs text-green-600">
+                  <p class="text-xs text-herb-600">
                     {formatRupiah(tx.total_price)} —
                     {new Date(tx.completed_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -330,21 +332,24 @@
           {/if}
 
           {#if order.oil_listings}
-            <div class="mb-3 rounded-lg bg-green-50 p-3 text-xs text-stone-700">
-              <p>📍 {order.oil_listings.pickup_address}</p>
-
-              <p class="mt-1">
-                💰 {formatRupiah(order.oil_listings.price_per_liter)}/L —
+            <div class="order-card-address">
+              <p class="flex items-start gap-1">
+                <svg class="icon w-3.5 h-3.5 mt-0.5 flex-shrink-0"><use href="/icons.svg#map-pin"/></svg>
+                <span>{order.oil_listings.pickup_address}</span>
+              </p>
+              <p class="mt-1 flex items-center gap-1">
+                <svg class="icon w-3.5 h-3.5 flex-shrink-0"><use href="/icons.svg#credit-card"/></svg>
+                {formatRupiah(order.oil_listings.price_per_liter)}/L —
                 Total estimasi:
                 {formatRupiah(
                   parseFloat(order.requested_liters) *
                     parseFloat(order.oil_listings.price_per_liter)
                 )}
               </p>
-
               {#if order.notes}
-                <p class="mt-2 whitespace-pre-line text-stone-500">
-                  Catatan: {order.notes}
+                <p class="mt-2 whitespace-pre-line text-earth-600 flex items-start gap-1">
+                  <svg class="icon w-3.5 h-3.5 mt-0.5 flex-shrink-0"><use href="/icons.svg#message-circle"/></svg>
+                  <span>Catatan: {order.notes}</span>
                 </p>
               {/if}
             </div>
@@ -365,30 +370,35 @@
             {/if}
           {/if}
 
-          <div class="flex flex-wrap gap-2">
+          <div class="order-card-actions">
             {#each nextActions(order.status) as action}
               <button
                 onclick={() => updateOrderStatus(order.id, action.status)}
-                class={action.cls + ' px-3 py-1.5 text-xs'}
+                class={action.cls + ' btn-sm'}
                 disabled={actionLoading}
               >
-                {actionLoading ? 'Memproses...' : action.label}
+                {#if actionLoading}
+                  <svg class="icon w-3.5 h-3.5 animate-spin"><use href="/icons.svg#loader"/></svg>
+                {/if}
+                {action.label}
               </button>
             {/each}
 
             <button
               onclick={() => (chatOrderId = order.id)}
-              class="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1"
+              class="btn-secondary btn-sm inline-flex items-center gap-1"
             >
-              💬 Chat
+              <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#message-circle"/></svg>
+              Chat
             </button>
 
             {#if order.status === 'completed'}
               <a
                 href="/dashboard/payment?order_id={order.id}"
-                class="btn-primary px-3 py-1.5 text-xs inline-flex items-center gap-1"
+                class="btn-primary btn-sm inline-flex items-center gap-1"
               >
-                💳 Bayar UMKM
+                <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#credit-card"/></svg>
+                Bayar UMKM
               </a>
             {/if}
           </div>

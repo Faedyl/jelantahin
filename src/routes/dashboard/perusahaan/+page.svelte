@@ -28,57 +28,57 @@
   });
 
   function statusBadge(s) {
-    const map = { 'pending':'badge-yellow','confirmed':'badge-blue','picked_up':'badge-green','completed':'badge-green','cancelled':'badge-red' };
-    return map[s] || 'badge-stone';
+    const map = { 'pending':'badge-warning','confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','cancelled':'badge-danger' };
+    return map[s] || 'badge-default';
   }
 </script>
 
 {#if loading}
-  <div class="flex min-h-[40vh] items-center justify-center"><p class="text-stone-400">Memuat...</p></div>
+  <div class="flex min-h-[40vh] items-center justify-center"><p class="text-earth-600">Memuat...</p></div>
 {:else}
-  <div class="mx-auto max-w-5xl px-4 py-8">
-    <div class="flex items-center justify-between mb-8">
+  <div class="page-container py-8">
+    <div class="page-header flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-stone-800">Dashboard Perusahaan</h1>
-        <p class="text-sm text-stone-500">Cari dan klaim minyak jelantah dari UMKM</p>
+        <h1 class="page-title">Dashboard Perusahaan</h1>
+        <p class="page-subtitle">Cari dan klaim minyak jelantah dari UMKM</p>
       </div>
       <a href="/dashboard/perusahaan/browse" class="btn-primary">Cari Minyak</a>
     </div>
 
     <!-- Stats -->
     <div class="grid gap-4 sm:grid-cols-3 mb-8">
-      <div class="stat-card">
-        <p class="text-xs text-stone-500 uppercase tracking-wide">Total Pesanan</p>
-        <p class="text-2xl font-bold text-stone-800 mt-1">{stats.totalOrders}</p>
+      <div class="stat">
+        <p class="stat-label">Total Pesanan</p>
+        <p class="stat-value">{stats.totalOrders}</p>
       </div>
-      <div class="stat-card">
-        <p class="text-xs text-stone-500 uppercase tracking-wide">Pesanan Aktif</p>
-        <p class="text-2xl font-bold text-blue-600 mt-1">{stats.activeOrders}</p>
+      <div class="stat">
+        <p class="stat-label">Pesanan Aktif</p>
+        <p class="stat-value text-blue-600 mt-1">{stats.activeOrders}</p>
       </div>
-      <div class="stat-card">
-        <p class="text-xs text-stone-500 uppercase tracking-wide">Total Litter Dikoleksi</p>
-        <p class="text-2xl font-bold text-green-600 mt-1">{stats.totalLiters} L</p>
+      <div class="stat">
+        <p class="stat-label">Total Litter Dikoleksi</p>
+        <p class="stat-value text-herb-600 mt-1">{stats.totalLiters} L</p>
       </div>
     </div>
 
     <!-- Active Orders -->
-    <div class="card">
+    <div class="card p-5">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="font-semibold text-stone-800">Pesanan Aktif</h2>
-        <a href="/dashboard/perusahaan/orders" class="text-sm text-jelantah-600 hover:text-jelantah-700">Lihat semua →</a>
+        <h2 class="font-semibold text-earth-900">Pesanan Aktif</h2>
+        <a href="/dashboard/perusahaan/orders" class="text-sm text-gold-600 hover:text-gold-700">Lihat semua →</a>
       </div>
 
       {#if orders.length === 0}
-        <p class="text-sm text-stone-400">Belum ada pesanan. Mulai dengan mencari listing minyak.</p>
+        <p class="text-sm text-earth-600">Belum ada pesanan. Mulai dengan mencari listing minyak.</p>
       {:else}
-        <div class="divide-y divide-stone-100">
+        <div class="divide-y divide-earth-200/60">
           {#each orders.filter(o => !['completed','cancelled'].includes(o.status)) as order}
             <div class="flex items-center justify-between py-3">
               <div>
-                <p class="text-sm font-medium text-stone-800">
+                <p class="text-sm font-medium text-earth-900">
                   {order.requested_liters}L — #{order.id.slice(0,8)}
                 </p>
-                <p class="text-xs text-stone-500">
+                <p class="text-xs text-earth-600">
                   {new Date(order.created_at).toLocaleDateString('id-ID')}
                   {#if order.pickup_date} • Jemput: {new Date(order.pickup_date).toLocaleDateString('id-ID')}{/if}
                 </p>

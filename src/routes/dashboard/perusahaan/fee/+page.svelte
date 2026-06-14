@@ -50,7 +50,7 @@
     saving = false;
 
     if (err) { error = err.message; return; }
-    success = '✅ Persentase biaya admin berhasil diperbarui!';
+    success = 'Persentase biaya admin berhasil diperbarui!';
   }
 
   function formatRupiah(v) {
@@ -58,83 +58,92 @@
   }
 </script>
 
-<div class="mx-auto max-w-lg px-4 py-8">
-  <a href="/dashboard/perusahaan" class="text-sm text-jelantah-600 hover:text-jelantah-700 mb-4 inline-block">
-    ← Kembali ke Dashboard
+<div class="page-container-narrow py-8">
+  <a href="/dashboard/perusahaan" class="nav-link mb-4 inline-flex">
+    <svg class="icon w-4 h-4"><use href="/icons.svg#arrow-right"/></svg>
+    <span>Kembali ke Dashboard</span>
   </a>
 
-  <div class="card">
+  <div class="card p-6">
     <div class="text-center mb-6">
-      <span class="text-5xl">💰</span>
-      <h1 class="text-xl font-bold text-stone-800 mt-3">Biaya Admin (%)</h1>
-      <p class="text-sm text-stone-500">
+      <svg class="icon w-12 h-12 mx-auto text-gold-500 mb-3"><use href="/icons.svg#credit-card"/></svg>
+      <h1 class="page-title text-xl">Biaya Admin (%)</h1>
+      <p class="page-subtitle">
         Persentase biaya admin dari subtotal transaksi
       </p>
     </div>
 
     {#if loading}
-      <p class="text-stone-400 text-sm text-center py-8">Memuat...</p>
+      <p class="text-sm text-earth-500 text-center py-8">Memuat...</p>
     {:else}
       {#if error}
-        <div class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div class="alert-error mb-4">
+          <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#alert-circle"/></svg>
+          <span>{error}</span>
+        </div>
       {/if}
       {#if success}
-        <div class="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">{success}</div>
+        <div class="alert-success mb-4">
+          <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#check"/></svg>
+          <span>{success}</span>
+        </div>
       {/if}
 
-      <div class="rounded-xl bg-amber-50 p-4 text-sm text-amber-700 mb-6">
-        <p class="font-semibold">💡 Cara kerja</p>
-        <p class="mt-1">Biaya admin dihitung sebagai persentase dari subtotal pesanan.</p>
-        <p class="mt-2 font-mono text-xs bg-amber-100 rounded-lg p-2">
-          Biaya Admin = Subtotal × (Persentase / 100)<br>
-          Total Bayar = Subtotal + Biaya Admin
-        </p>
+      <div class="alert-info mb-6">
+        <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#info"/></svg>
+        <div>
+          <p class="font-semibold">Cara kerja</p>
+          <p class="mt-1">Biaya admin dihitung sebagai persentase dari subtotal pesanan.</p>
+          <p class="mt-2 font-mono text-xs bg-gold-100 rounded-lg p-2">
+            Biaya Admin = Subtotal × (Persentase / 100)<br>
+            Total Bayar = Subtotal + Biaya Admin
+          </p>
+        </div>
       </div>
 
       <form onsubmit={(e) => { e.preventDefault(); handleSave(); }}>
-        <label class="block text-sm font-medium text-stone-700 mb-1">Persentase Biaya Admin (%)</label>
+        <label class="input-label text-center">Persentase Biaya Admin (%)</label>
         <div class="relative mb-2">
           <input
             type="number"
             step="0.1"
             min="0"
             max="100"
-            class="input-field text-3xl font-bold text-center pr-8"
+            class="input text-3xl font-bold text-center pr-12"
             bind:value={adminFeePercent}
             placeholder="2.5"
           />
-          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-stone-400">%</span>
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-earth-500">%</span>
         </div>
-        <p class="text-xs text-stone-400 text-center mb-6">
+        <p class="text-xs text-earth-500 text-center mb-6">
           Saat ini: {adminFeePercent || '0'}%
         </p>
 
-        <button type="submit" class="btn-primary w-full" disabled={saving}>
+        <button type="submit" class="btn-primary btn-md w-full" disabled={saving}>
           {saving ? 'Menyimpan...' : 'Simpan'}
         </button>
       </form>
 
       <!-- Preview -->
-      <div class="mt-6 pt-4 border-t border-stone-100">
-        <p class="text-xs text-stone-500 mb-2">Pratinjau:</p>
-        <div class="bg-green-50 rounded-xl p-3 text-sm">
-          <div class="flex justify-between">
-            <span class="text-stone-600">Subtotal ({previewLiters}L × {formatRupiah(previewPricePerLiter)})</span>
-            <span class="font-medium">{formatRupiah(previewSubtotal)}</span>
-          </div>
-          <div class="flex justify-between mt-1">
-            <span class="text-stone-600">Biaya Admin ({adminFeePercent || '0'}%)</span>
-            <span class="font-medium">{formatRupiah(previewAdminFee)}</span>
-          </div>
-          <div class="flex justify-between border-t border-green-200 pt-1 mt-1 font-bold">
-            <span>Total</span>
-            <span class="text-jelantah-700">{formatRupiah(previewTotal)}</span>
-          </div>
+      <div class="divider"></div>
+      <p class="text-xs text-earth-600 mb-2">Pratinjau:</p>
+      <div class="rounded-lg bg-herb-100 p-3 text-sm">
+        <div class="flex justify-between">
+          <span class="text-earth-700">Subtotal ({previewLiters}L × {formatRupiah(previewPricePerLiter)})</span>
+          <span class="font-medium">{formatRupiah(previewSubtotal)}</span>
         </div>
-        <p class="text-xs text-stone-400 mt-2 text-center">
-          Berdasarkan simulasi {previewLiters}L @ {formatRupiah(previewPricePerLiter)}/L
-        </p>
+        <div class="flex justify-between mt-1">
+          <span class="text-earth-700">Biaya Admin ({adminFeePercent || '0'}%)</span>
+          <span class="font-medium">{formatRupiah(previewAdminFee)}</span>
+        </div>
+        <div class="flex justify-between border-t border-herb-200 pt-1 mt-1 font-bold">
+          <span>Total</span>
+          <span class="text-gold-700">{formatRupiah(previewTotal)}</span>
+        </div>
       </div>
+      <p class="text-xs text-earth-500 mt-2 text-center">
+        Berdasarkan simulasi {previewLiters}L @ {formatRupiah(previewPricePerLiter)}/L
+      </p>
     {/if}
   </div>
 </div>
