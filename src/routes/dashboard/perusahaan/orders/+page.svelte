@@ -466,12 +466,12 @@
                 {#each trackingSteps as step, index}
                   <div class="step-item">
                     <div
-                      class="step-circle {index <= stepIndex(order.status) ? 'step-circle-active' : 'step-circle-inactive'}"
+                      class="step-circle {index <= stepIndex(paidOrdersMap[order.id] ? 'paid' : order.status) ? 'step-circle-active' : 'step-circle-inactive'}"
                     >
                       {index + 1}
                     </div>
                     <p
-                      class="step-label {index <= stepIndex(order.status) ? 'step-label-active' : 'step-label-inactive'}"
+                      class="step-label {index <= stepIndex(paidOrdersMap[order.id] ? 'paid' : order.status) ? 'step-label-active' : 'step-label-inactive'}"
                     >
                       {step.label}
                     </p>

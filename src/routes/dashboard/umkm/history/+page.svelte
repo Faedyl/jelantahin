@@ -19,6 +19,13 @@
 
   let pointsBalance = $state(0);
   let incomingPayments = $state([]);
+  let paidOrdersMap = $derived(
+    Object.fromEntries(
+      incomingPayments
+        .filter(p => p.status === 'confirmed' || p.status === 'paid')
+        .map(p => [p.order_id, p])
+    )
+  );
   let totalReceived = $state(0);
   let rejectConfirmOrderId = $state(null);
   let actionLoading = $state(false);
@@ -523,12 +530,12 @@
                     {#each trackingSteps as step, index}
                       <div class="step-item">
                         <div
-                          class="step-circle {index <= stepIndex(order.status) ? 'step-circle-active' : 'step-circle-inactive'}"
+                          class="step-circle {index <= stepIndex(paidOrdersMap[order.id] ? 'paid' : order.status) ? 'step-circle-active' : 'step-circle-inactive'}"
                         >
                           {index + 1}
                         </div>
                         <p
-                          class="step-label {index <= stepIndex(order.status) ? 'step-label-active' : 'step-label-inactive'}"
+                          class="step-label {index <= stepIndex(paidOrdersMap[order.id] ? 'paid' : order.status) ? 'step-label-active' : 'step-label-inactive'}"
                         >
                           {step.label}
                         </p>
