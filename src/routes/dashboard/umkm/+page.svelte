@@ -5,6 +5,7 @@
   import { getProfile, getMyListings, getOrdersAsUmkm, updateOrder, getPointsBalance, ensurePointsAccount } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import ConfirmModal from '$lib/ConfirmModal.svelte';
+  import NotificationPopup from '$lib/NotificationPopup.svelte';
 
   let profile = $state(null);
   let listings = $state([]);
@@ -16,6 +17,17 @@
   let error = $state('');
   let rejectConfirmOrderId = $state(null);
   let interval;
+
+  /** Notification popup state */
+  let notification = $state(null);
+
+  function showNotification(type, title, message) {
+    notification = { type, title, message };
+  }
+
+  function dismissNotification() {
+    notification = null;
+  }
 
   let pendingOrders = $derived(orders.filter(o => o.status === 'pending'));
   let pendingCount = $derived(pendingOrders.length);
@@ -29,6 +41,7 @@
       error = err.message;
     } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'confirmed_by_umkm' } : o);
+      showNotification('success', 'Pesanan Diterima', 'Pesanan berhasil diterima. Perusahaan akan segera memproses pickup.');
     }
   }
 
@@ -41,6 +54,7 @@
       error = err.message;
     } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'picked_up' } : o);
+      showNotification('success', 'Penjemputan Dikonfirmasi', 'Minyak jelantah telah dijemput. Menunggu perusahaan menyelesaikan pesanan.');
     }
   }
 
@@ -53,6 +67,7 @@
       error = err.message;
     } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'completed' } : o);
+      showNotification('success', 'Pesanan Selesai', 'Transaksi selesai! Poin kupon telah ditambahkan ke akun Anda.');
     }
   }
 
@@ -72,6 +87,7 @@
       error = err.message;
     } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o);
+      showNotification('error', 'Pesanan Dibatalkan', 'Pesanan telah dibatalkan.');
     }
   }
 
@@ -394,5 +410,14 @@
     onconfirm={confirmReject}
     oncancel={() => rejectConfirmOrderId = null}
     loading={actionLoading}
+  />
+{/if}
+
+{#if notification}
+  <NotificationPopup
+    type={notification.type}
+    title={notification.title}
+    message={notification.message}
+    ondismiss={dismissNotification}
   />
 {/if}

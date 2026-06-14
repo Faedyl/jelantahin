@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getPaymentConfirmationsForOrder, confirmOrderPayment, getPlatformConfig } from '$lib/supabase.js';
+  import { getProfile, getPaymentConfirmationsForOrder, confirmOrderPayment, getPlatformConfig, getUmkmBanks } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
 
   let profile = $state(null);
@@ -13,6 +13,7 @@
   let umkmProfile = $state(null);
   let orderPayments = $state([]);
   let adminFeePercent = $state(0);
+  let umkmBanks = $state([]);
 
   // ── Form state ──
   let bankSenderName = $state('');
@@ -52,7 +53,10 @@
         const { data: feeData } = await getPlatformConfig('admin_fee_percentage');
         adminFeePercent = parseFloat(feeData?.value || '0');
 
-        // Get UMKM bank details
+        // Get UMKM bank details — try multiple banks, fallback to profile
+        const { data: bankData } = await getUmkmBanks(orderData.umkm_id);
+        umkmBanks = bankData || [];
+
         const { data: umkmData } = await supabase
           .from('profiles')
           .select('full_name, umkm_name, bank_name, bank_account, bank_holder')
@@ -214,7 +218,40 @@
           </div>
         </div>
 
-        {#if umkmProfile?.bank_account}
+        {#if umkmBanks.length > 0}
+          <div class="space-y-3">
+            {#each umkmBanks as bank, i}
+              <div class="bg-white rounded-lg p-4 {i > 0 ? '' : ''}">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <p class="font-semibold text-earth-800 text-lg">{bank.bank_name}</p>
+                      {#if bank.is_primary}
+                        <span class="badge-success text-[10px] px-1.5 py-0.5">Utama</span>
+                      {/if}
+                    </div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                      <p class="text-base font-bold font-mono tracking-wider text-earth-800">{bank.bank_account}</p>
+                      <button
+                        onclick={() => {
+                          const copyText = `${bank.bank_name} — ${bank.bank_account} — a.n. ${bank.bank_holder}`;
+                          copyClip(copyText);
+                          bankSuccess = 'Data bank disalin!';
+                        }}
+                        class="btn-secondary btn-xs"
+                      >
+                        <svg class="icon w-3 h-3"><use href="/icons.svg#menu"/></svg>
+                        Salin
+                      </button>
+                    </div>
+                    <p class="text-sm text-earth-700 mt-0.5">a.n. <strong>{bank.bank_holder}</strong></p>
+                  </div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {:else if umkmProfile?.bank_account}
+          <!-- Fallback: single bank from profile (before migration) -->
           <div class="bg-white rounded-lg p-4">
             <p class="text-xs text-earth-600 mb-1">Bank Tujuan</p>
             <p class="font-semibold text-earth-800 text-lg">{umkmProfile.bank_name || '-'}</p>

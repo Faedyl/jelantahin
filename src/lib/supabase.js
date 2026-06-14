@@ -443,6 +443,71 @@ export async function confirmOrderPayment({ orderId, userId, bankId, amount, sen
     .single();
 }
 
+// ─── UMKM Banks (multi-rekening) ─────────────────────────────
+
+export async function getUmkmBanks(umkmId) {
+  return supabase
+    .from("umkm_banks")
+    .select("*")
+    .eq("umkm_id", umkmId)
+    .order("is_primary", { ascending: false })
+    .order("created_at", { ascending: true });
+}
+
+export async function createUmkmBank(bank) {
+  const { data: existing } = await supabase
+    .from("umkm_banks")
+    .select("id")
+    .eq("umkm_id", bank.umkm_id)
+    .limit(1);
+
+  // First bank is auto-primary
+  const isPrimary = !existing || existing.length === 0;
+
+  return supabase
+    .from("umkm_banks")
+    .insert([{
+      umkm_id: bank.umkm_id,
+      bank_name: bank.bank_name,
+      bank_account: bank.bank_account,
+      bank_holder: bank.bank_holder,
+      is_primary: isPrimary,
+    }])
+    .select()
+    .single();
+}
+
+export async function updateUmkmBank(id, updates) {
+  return supabase
+    .from("umkm_banks")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+}
+
+export async function deleteUmkmBank(id) {
+  const { error } = await supabase.from("umkm_banks").delete().eq("id", id);
+  return { error };
+}
+
+export async function setPrimaryUmkmBank(id, umkmId) {
+  // Unset all primary for this UMKM, then set the chosen one
+  const { error: unsetErr } = await supabase
+    .from("umkm_banks")
+    .update({ is_primary: false, updated_at: new Date().toISOString() })
+    .eq("umkm_id", umkmId);
+
+  if (unsetErr) return { error: unsetErr };
+
+  return supabase
+    .from("umkm_banks")
+    .update({ is_primary: true, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+}
+
 // ─── Platform Config ─────────────────────────────────────────
 
 export async function getPlatformConfig(key) {

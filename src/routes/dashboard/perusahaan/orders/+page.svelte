@@ -8,6 +8,7 @@
   import Chat from '$lib/Chat.svelte';
   import PromptModal from '$lib/PromptModal.svelte';
   import ConfirmModal from '$lib/ConfirmModal.svelte';
+  import NotificationPopup from '$lib/NotificationPopup.svelte';
 
   let profile = $state(null);
   let orders = $state([]);
@@ -20,6 +21,17 @@
   let completePromptError = $state('');
   let cancelConfirmOrderId = $state(null);
   let interval;
+
+  /** Notification popup state */
+  let notification = $state(null);
+
+  function showNotification(type, title, message) {
+    notification = { type, title, message };
+  }
+
+  function dismissNotification() {
+    notification = null;
+  }
 
   let activeOrdersMap = $derived.by(() => {
     const active = orders.filter(o => o.status !== 'cancelled' && o.status !== 'completed');
@@ -166,6 +178,7 @@
     orders = orders.map((o) => (o.id === orderId ? { ...o, status: 'completed_by_perusahaan' } : o));
     actionLoading = false;
     completePromptOrderId = null;
+    showNotification('success', 'Pesanan Diselesaikan', 'Pickup berhasil diselesaikan. Pembayaran telah diproses ke UMKM.');
   }
 
   async function executeStatusUpdate(orderId, newStatus) {
@@ -182,6 +195,20 @@
 
     orders = orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o));
     actionLoading = false;
+
+    // Show notification based on status
+    const statusMessages = {
+      'confirmed': 'Pickup telah dikonfirmasi. Menunggu penjemputan.',
+      'picked_up_by_perusahaan': 'Status diperbarui: minyak sedang dalam perjalanan.',
+      'cancelled': 'Pesanan telah dibatalkan.'
+    };
+    if (statusMessages[newStatus]) {
+      showNotification(
+        newStatus === 'cancelled' ? 'error' : 'success',
+        newStatus === 'cancelled' ? 'Pesanan Dibatalkan' : 'Status Diperbarui',
+        statusMessages[newStatus]
+      );
+    }
   }
 
   async function executeCancel() {
@@ -492,5 +519,14 @@
     onconfirm={executeCancel}
     oncancel={() => cancelConfirmOrderId = null}
     loading={actionLoading}
+  />
+{/if}
+
+{#if notification}
+  <NotificationPopup
+    type={notification.type}
+    title={notification.title}
+    message={notification.message}
+    ondismiss={dismissNotification}
   />
 {/if}

@@ -5,6 +5,7 @@
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
   import ConfirmModal from '$lib/ConfirmModal.svelte';
+  import NotificationPopup from '$lib/NotificationPopup.svelte';
 
   let profile = $state(null);
   let listings = $state([]);
@@ -13,6 +14,15 @@
   let error = $state('');
   let viewMode = $state('map');
   let confirmListing = $state(null); // listing to confirm claiming for // 'map' or 'list'
+  let notification = $state(null);
+
+  function showNotification(type, title, message) {
+    notification = { type, title, message };
+  }
+
+  function dismissNotification() {
+    notification = null;
+  }
 
   let markers = $derived(
     listings
@@ -97,7 +107,8 @@
     await updateListing(listing.id, { status: 'claimed' });
 
     actionLoading = false;
-    goto('/dashboard/perusahaan/orders');
+    showNotification('success', 'Pickup Diterima', 'Permintaan pickup berhasil diterima! Mengarahkan ke halaman pesanan...');
+    setTimeout(() => goto('/dashboard/perusahaan/orders'), 1000);
   }
 
   function formatRupiah(value) {
@@ -300,5 +311,14 @@
     onconfirm={executeClaim}
     oncancel={() => confirmListing = null}
     loading={actionLoading}
+  />
+{/if}
+
+{#if notification}
+  <NotificationPopup
+    type={notification.type}
+    title={notification.title}
+    message={notification.message}
+    ondismiss={dismissNotification}
   />
 {/if}
