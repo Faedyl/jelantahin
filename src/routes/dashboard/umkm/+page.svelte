@@ -179,10 +179,16 @@
     interval = setInterval(async () => {
       const { data: { session: s } } = await supabase.auth.getSession();
       if (!s) return;
-      const { data } = await getOrdersAsUmkm(s.user.id);
-      if (data) {
-        orders = data;
-        watchRemoteChanges(data);
+      const [ordersData, listingsData] = await Promise.all([
+        getOrdersAsUmkm(s.user.id),
+        getMyListings(s.user.id)
+      ]);
+      if (ordersData.data) {
+        orders = ordersData.data;
+        watchRemoteChanges(ordersData.data);
+      }
+      if (listingsData.data) {
+        listings = listingsData.data;
       }
     }, 3000);
   });
@@ -191,7 +197,7 @@
 
   function statusBadge(status) {
     const map = {
-      'available': 'badge-success',
+      'available': 'badge-info',
       'claimed': 'badge-info',
       'completed': 'badge-success',
       'paid': 'badge-success',

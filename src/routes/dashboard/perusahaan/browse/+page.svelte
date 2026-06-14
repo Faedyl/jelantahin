@@ -104,7 +104,13 @@
       return;
     }
 
-    await updateListing(listing.id, { status: 'claimed' });
+    const { error: claimErr } = await updateListing(listing.id, { status: 'claimed' });
+
+    if (claimErr) {
+      error = 'Gagal mengklaim penawaran: ' + claimErr.message;
+      actionLoading = false;
+      return;
+    }
 
     actionLoading = false;
     showNotification('success', 'Pickup Diterima', 'Permintaan pickup berhasil diterima! Mengarahkan ke halaman pesanan...');
@@ -203,7 +209,7 @@
                   {listing.city || listing.pickup_address?.slice(0, 30)}
                 </p>
               </div>
-              <span class="badge-success">Available</span>
+              <span class="badge-info">Available</span>
             </div>
 
             <div class="flex gap-4 text-sm mb-2">
@@ -258,7 +264,7 @@
                   {listing.city || listing.pickup_address?.slice(0, 30)}
                 </p>
               </div>
-              <span class="badge-success">Available</span>
+              <span class="badge-info">Available</span>
             </div>
 
             <div class="flex gap-4 text-sm mb-4">

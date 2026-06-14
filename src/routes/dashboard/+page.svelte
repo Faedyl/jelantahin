@@ -136,7 +136,7 @@
 
   function statusBadge(s) {
     const map = {
-      'available':'badge-success','claimed':'badge-info','pending':'badge-warning',
+      'available':'badge-info','claimed':'badge-info','pending':'badge-warning',
       'confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','paid':'badge-success','cancelled':'badge-danger',
       'confirmed_by_umkm':'badge-warning','picked_up_by_perusahaan':'badge-info','completed_by_perusahaan':'badge-info'
     };

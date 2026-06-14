@@ -172,13 +172,14 @@
 
     loading = false;
 
-    // Auto-refresh orders & payments every 3s
+    // Auto-refresh orders, payments & listings every 3s
     interval = setInterval(async () => {
       const { data: { session: s } } = await supabase.auth.getSession();
       if (!s) return;
-      const [ordersRes, paymentsRes] = await Promise.all([
+      const [ordersRes, paymentsRes, listingsRes] = await Promise.all([
         getOrdersAsUmkm(s.user.id),
         getPaymentsForUmkm(s.user.id),
+        getMyListings(s.user.id),
       ]);
       if (ordersRes.data) {
         orders = ordersRes.data;
@@ -205,6 +206,9 @@
           .filter(p => p.status === 'confirmed' || p.status === 'paid')
           .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
       }
+      if (listingsRes.data) {
+        listings = listingsRes.data;
+      }
     }, 3000);
   });
 
@@ -220,7 +224,7 @@
 
   function statusBadge(status) {
     const map = {
-      available: 'badge-success',
+      available: 'badge-info',
       claimed: 'badge-info',
       completed: 'badge-success',
       paid: 'badge-success',
