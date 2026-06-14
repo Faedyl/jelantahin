@@ -319,6 +319,7 @@
     type={notification.type}
     title={notification.title}
     message={notification.message}
+    noSound={notification.noSound}
     ondismiss={dismissNotification}
   />
 {/if}

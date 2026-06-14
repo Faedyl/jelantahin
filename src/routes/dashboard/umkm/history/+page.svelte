@@ -32,7 +32,7 @@
   let orderStatusSnapshot = $state({}); // {orderId: status}
 
   function showNotification(type, title, message) {
-    notification = { type, title, message };
+    notification = { type, title, message, noSound: true };
   }
 
   function dismissNotification() {
@@ -64,6 +64,7 @@
       const match = perusahaanTransitions[oldStatus];
       if (match && match.to === newStatus) {
         showNotification(match.type, match.title, match.msg);
+        notification.noSound = false;
       }
     }
     // Update snapshot
@@ -647,6 +648,7 @@
     type={notification.type}
     title={notification.title}
     message={notification.message}
+    noSound={notification.noSound}
     ondismiss={dismissNotification}
   />
 {/if}

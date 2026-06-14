@@ -15,7 +15,7 @@
    *   ondismiss — Callback when notification is dismissed
    */
 
-  let { type = 'success', title = '', message = '', duration = 4000, ondismiss } = $props();
+  let { type = 'success', title = '', message = '', duration = 4000, noSound = false, ondismiss } = $props();
 
   let visible = $state(true);
 
@@ -25,9 +25,11 @@
   }
 
   onMount(() => {
-    // Play the appropriate sound
-    if (type === 'success') playSuccessSound();
-    else if (type === 'error') playErrorSound();
+    // Play sound only for remote notifications (noSound=false)
+    if (!noSound) {
+      if (type === 'success') playSuccessSound();
+      else if (type === 'error') playErrorSound();
+    }
     // else info = silent
 
     // Auto-dismiss

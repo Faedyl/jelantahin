@@ -30,7 +30,7 @@
   let orderStatusSnapshot = $state({}); // {orderId: status}
 
   function showNotification(type, title, message) {
-    notification = { type, title, message };
+    notification = { type, title, message, noSound: true };
   }
 
   function dismissNotification() {
@@ -56,12 +56,16 @@
       // pending→cancelled is from UMKM; picked_up_by_perusahaan→cancelled is from Perusahaan (skip)
       if (oldStatus === 'pending' && newStatus === 'cancelled') {
         showNotification('error', 'Pesanan Dibatalkan UMKM', 'UMKM membatalkan pesanan.');
+        notification.noSound = false;
       } else if (oldStatus === 'pending' && newStatus === 'confirmed_by_umkm') {
         showNotification('success', 'Pesanan Diterima UMKM', 'UMKM telah menerima pesanan pickup.');
+        notification.noSound = false;
       } else if (oldStatus === 'picked_up_by_perusahaan' && newStatus === 'picked_up') {
         showNotification('success', 'Penjemputan Dikonfirmasi UMKM', 'UMKM mengkonfirmasi minyak telah dijemput.');
+        notification.noSound = false;
       } else if (oldStatus === 'completed_by_perusahaan' && newStatus === 'completed') {
         showNotification('success', 'Pesanan Selesai', 'UMKM telah menyelesaikan pesanan.');
+        notification.noSound = false;
       }
     }
     // Update snapshot
@@ -604,6 +608,7 @@
     type={notification.type}
     title={notification.title}
     message={notification.message}
+    noSound={notification.noSound}
     ondismiss={dismissNotification}
   />
 {/if}
