@@ -559,7 +559,7 @@
               Chat
             </button>
 
-            {#if order.status === 'completed' || order.status === 'completed_by_perusahaan' || order.status === 'paid'}
+            {#if order.status === 'completed' || order.status === 'paid'}
               {#if order.status === 'paid' || paidOrdersMap[order.id]}
                 <!-- Already paid -->
                 <span class="badge-success inline-flex items-center gap-1 btn-sm">

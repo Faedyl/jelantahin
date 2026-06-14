@@ -50,6 +50,12 @@
       order = orderData;
 
       if (orderData) {
+        // Only allow payment when order is 'completed' (UMKM has confirmed)
+        if (orderData.status !== 'completed') {
+          goto('/dashboard/perusahaan/orders');
+          return;
+        }
+
         // Get admin fee
         const { data: feeData } = await getPlatformConfig('admin_fee_percentage');
         adminFeePercent = parseFloat(feeData?.value || '0');
