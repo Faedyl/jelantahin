@@ -39,6 +39,11 @@
     notification = null;
   }
 
+  /** Update snapshot immediately after local action to avoid double-trigger from polling */
+  function updateSnapshot(orderId, newStatus) {
+    orderStatusSnapshot = { ...orderStatusSnapshot, [orderId]: newStatus };
+  }
+
   /**
    * Watch for status changes made by the OTHER party (Perusahaan)
    * by comparing current orders with snapshot. Shows notification + sound.
@@ -235,6 +240,7 @@
     } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'confirmed_by_umkm' } : o);
       showNotification('success', 'Pesanan Diterima', 'Pesanan berhasil diterima. Perusahaan akan segera memproses pickup.');
+      updateSnapshot(orderId, 'confirmed_by_umkm');
     }
   }
 
@@ -248,6 +254,7 @@
     } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'picked_up' } : o);
       showNotification('success', 'Penjemputan Dikonfirmasi', 'Minyak jelantah telah dijemput. Menunggu perusahaan menyelesaikan pesanan.');
+      updateSnapshot(orderId, 'picked_up');
     }
   }
 
@@ -261,6 +268,7 @@
     } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'completed' } : o);
       showNotification('success', 'Pesanan Selesai', 'Transaksi selesai! Poin kupon telah ditambahkan ke akun Anda.');
+      updateSnapshot(orderId, 'completed');
     }
   }
 
@@ -281,6 +289,7 @@
       } else {
         orders = orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o);
         showNotification('error', 'Pesanan Dibatalkan', 'Pesanan telah dibatalkan.');
+        updateSnapshot(orderId, 'cancelled');
       }
     });
   }

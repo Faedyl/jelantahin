@@ -37,6 +37,11 @@
     notification = null;
   }
 
+  /** Update snapshot immediately after local action to avoid double-trigger from polling */
+  function updateSnapshot(orderId, newStatus) {
+    orderStatusSnapshot = { ...orderStatusSnapshot, [orderId]: newStatus };
+  }
+
   /**
    * Watch for status changes made by the OTHER party (UMKM)
    * by comparing current orders with snapshot. Shows notification + sound.
@@ -241,6 +246,7 @@
     actionLoading = false;
     completePromptOrderId = null;
     showNotification('success', 'Pesanan Diselesaikan', 'Pickup berhasil diselesaikan. Pembayaran telah diproses ke UMKM.');
+    updateSnapshot(orderId, 'completed_by_perusahaan');
   }
 
   async function executeStatusUpdate(orderId, newStatus) {
@@ -270,6 +276,7 @@
         newStatus === 'cancelled' ? 'Pesanan Dibatalkan' : 'Status Diperbarui',
         statusMessages[newStatus]
       );
+      updateSnapshot(orderId, newStatus);
     }
   }
 
