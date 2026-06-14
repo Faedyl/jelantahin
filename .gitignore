@@ -4,4 +4,9 @@ node_modules/
 .DS_Store
 .reasonix/
 .codegraph/
+# Screenshots & design check scripts
+hero-*.png
+hero-desktop.png
+hero-fullpage.png
+check-overlap.mjs
 supabase/.temp/
