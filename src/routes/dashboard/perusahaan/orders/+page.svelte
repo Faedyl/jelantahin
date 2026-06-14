@@ -80,11 +80,13 @@
 
     loading = false;
 
-    // Auto-refresh orders every 10s
+    // Auto-refresh orders every 3s
     interval = setInterval(async () => {
-      const { data } = await getOrdersAsPerusahaan(session.user.id);
+      const { data: { session: s } } = await supabase.auth.getSession();
+      if (!s) return;
+      const { data } = await getOrdersAsPerusahaan(s.user.id);
       if (data) orders = data;
-    }, 10000);
+    }, 3000);
   });
 
   onDestroy(() => clearInterval(interval));
