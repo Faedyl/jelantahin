@@ -85,6 +85,7 @@
       return new Date(b.created_at) - new Date(a.created_at);
     })
   );
+  let listingMarkers = $derived(
     listings
       .filter((l) => l.latitude != null && l.longitude != null)
       .map((l) => ({

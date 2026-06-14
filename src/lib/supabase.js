@@ -397,7 +397,7 @@ export async function getPaymentsForUmkm(userId) {
     .order("created_at", { ascending: false });
 }
 
-export async function confirmOrderPayment({ orderId, userId, bankId, amount, senderName, adminFee }) {
+export async function confirmOrderPayment({ orderId, userId, bankId, amount, senderName, adminFee, umkmBankId }) {
   // Verify caller owns this order (only the assigned Perusahaan can pay)
   const { data: order } = await supabase
     .from("orders")
@@ -432,6 +432,7 @@ export async function confirmOrderPayment({ orderId, userId, bankId, amount, sen
       transaction_id: null,
       user_id: userId,
       bank_id: bankId || null,
+      umkm_bank_id: umkmBankId || null,
       amount: amount,
       admin_fee: adminFee || 0,
       status: 'confirmed',

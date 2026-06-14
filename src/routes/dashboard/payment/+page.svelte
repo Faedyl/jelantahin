@@ -14,6 +14,7 @@
   let orderPayments = $state([]);
   let adminFeePercent = $state(0);
   let umkmBanks = $state([]);
+  let selectedBankId = $state(null);
 
   // ── Form state ──
   let bankSenderName = $state('');
@@ -56,6 +57,9 @@
         // Get UMKM bank details — try multiple banks, fallback to profile
         const { data: bankData } = await getUmkmBanks(orderData.umkm_id);
         umkmBanks = bankData || [];
+        // Pre-select primary bank, or the first one if none is primary
+        const primary = umkmBanks.find(b => b.is_primary);
+        selectedBankId = primary?.id || umkmBanks[0]?.id || null;
 
         const { data: umkmData } = await supabase
           .from('profiles')
@@ -100,6 +104,7 @@
       orderId: orderId,
       userId: session.user.id,
       bankId: null,
+      umkmBankId: selectedBankId,
       amount: totalToPay,
       senderName: bankSenderName,
       adminFee: adminFeeAmount,
@@ -219,9 +224,14 @@
         </div>
 
         {#if umkmBanks.length > 0}
-          <div class="space-y-3">
-            {#each umkmBanks as bank, i}
-              <div class="bg-white rounded-lg p-4 {i > 0 ? '' : ''}">
+          <!-- Pilih Rekening Tujuan -->
+          <div class="mb-3">
+            <p class="text-sm font-medium text-earth-700 mb-2">Pilih Rekening Tujuan:</p>
+
+            {#if umkmBanks.length === 1}
+              <!-- Only one bank — show directly, no radio -->
+              {@const bank = umkmBanks[0]}
+              <div class="bg-white rounded-lg p-4 border-2 border-herb-400">
                 <div class="flex items-center justify-between">
                   <div>
                     <div class="flex items-center gap-2">
@@ -248,7 +258,67 @@
                   </div>
                 </div>
               </div>
-            {/each}
+
+            {:else}
+              <!-- Multiple banks — radio selection -->
+              <div class="space-y-2 mb-3">
+                {#each umkmBanks as bank}
+                  <label
+                    class="flex items-center gap-3 bg-white rounded-lg p-3 cursor-pointer border-2 transition-colors {selectedBankId === bank.id ? 'border-herb-500 bg-herb-50' : 'border-earth-200 hover:border-earth-300'}"
+                  >
+                    <input
+                      type="radio"
+                      name="umkmBank"
+                      value={bank.id}
+                      checked={selectedBankId === bank.id}
+                      onchange={() => selectedBankId = bank.id}
+                      class="accent-herb-600 w-4 h-4"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <p class="font-semibold text-earth-800">{bank.bank_name}</p>
+                        {#if bank.is_primary}
+                          <span class="badge-success text-[10px] px-1.5 py-0.5">Utama</span>
+                        {/if}
+                      </div>
+                      <p class="text-sm font-mono text-earth-700">{bank.bank_account}</p>
+                      <p class="text-xs text-earth-600">a.n. {bank.bank_holder}</p>
+                    </div>
+                  </label>
+                {/each}
+              </div>
+
+              <!-- Detail rekening yang dipilih -->
+              {#each umkmBanks as bank}
+                {#if selectedBankId === bank.id}
+                  <div class="bg-white rounded-lg p-4 border-2 border-herb-400">
+                    <p class="text-xs text-earth-600 uppercase tracking-wide mb-2">Rekening Tujuan Dipilih</p>
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <p class="font-semibold text-earth-800 text-lg">{bank.bank_name}</p>
+                        </div>
+                        <div class="flex items-center gap-2 mt-0.5">
+                          <p class="text-base font-bold font-mono tracking-wider text-earth-800">{bank.bank_account}</p>
+                          <button
+                            onclick={() => {
+                              const copyText = `${bank.bank_name} — ${bank.bank_account} — a.n. ${bank.bank_holder}`;
+                              copyClip(copyText);
+                              bankSuccess = 'Data bank disalin!';
+                            }}
+                            class="btn-secondary btn-xs"
+                          >
+                            <svg class="icon w-3 h-3"><use href="/icons.svg#menu"/></svg>
+                            Salin
+                          </button>
+                        </div>
+                        <p class="text-sm text-earth-700 mt-0.5">a.n. <strong>{bank.bank_holder}</strong></p>
+                      </div>
+                    </div>
+                  </div>
+                {/if}
+              {/each}
+            {/if}
           </div>
         {:else if umkmProfile?.bank_account}
           <!-- Fallback: single bank from profile (before migration) -->
