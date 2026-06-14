@@ -424,7 +424,8 @@ export async function confirmOrderPayment({ orderId, userId, bankId, amount, sen
     return { error: { message: "Pembayaran untuk pesanan ini sudah dilakukan." } };
   }
 
-  return supabase
+  // ── Insert payment confirmation ──
+  const { data: paymentData, error: paymentError } = await supabase
     .from("payment_confirmations")
     .insert([{
       order_id: orderId,
@@ -441,6 +442,26 @@ export async function confirmOrderPayment({ orderId, userId, bankId, amount, sen
     }])
     .select()
     .single();
+
+  if (paymentError) return { error: paymentError };
+
+  // ── Update order status to 'paid' ──
+  const { error: orderError } = await supabase
+    .from("orders")
+    .update({ status: 'paid' })
+    .eq("id", orderId);
+
+  if (orderError) return { error: { message: `Pembayaran tersimpan, tetapi gagal update status pesanan: ${orderError.message}` } };
+
+  // ── Update transaction payment_status to 'paid' ──
+  const { error: txError } = await supabase
+    .from("transactions")
+    .update({ payment_status: 'paid' })
+    .eq("order_id", orderId);
+
+  if (txError) return { error: { message: `Pembayaran tersimpan, tetapi gagal update transaksi: ${txError.message}` } };
+
+  return { data: paymentData };
 }
 
 // ─── UMKM Banks (multi-rekening) ─────────────────────────────

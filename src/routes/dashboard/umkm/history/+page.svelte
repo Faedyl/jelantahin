@@ -52,6 +52,7 @@
     'confirmed_by_umkm': { to: 'confirmed',            type: 'success', title: 'Pickup Dikonfirmasi',          msg: 'Perusahaan telah mengkonfirmasi pickup.' },
     'confirmed':         { to: 'picked_up_by_perusahaan', type: 'success', title: 'Minyak Sedang Dijemput',         msg: 'Perusahaan sedang dalam perjalanan menjemput minyak.' },
     'picked_up':         { to: 'completed_by_perusahaan', type: 'success', title: 'Pesanan Diselesaikan Perusahaan', msg: 'Perusahaan telah menyelesaikan pesanan. Konfirmasi sekarang.' },
+    'completed':         { to: 'paid',                    type: 'success', title: 'Pembayaran Diterima',            msg: 'Perusahaan telah melakukan pembayaran.' },
     'picked_up_by_perusahaan': { to: 'cancelled',      type: 'error',   title: 'Pesanan Dibatalkan',           msg: 'Perusahaan membatalkan pesanan.' },
   };
 
@@ -91,7 +92,7 @@
       }))
   );
 
-  let completedOrders = $derived(orders.filter((order) => order.status === 'completed'));
+  let completedOrders = $derived(orders.filter((order) => order.status === 'completed' || order.status === 'paid'));
 
   let totalLiters = $derived(
     completedOrders.reduce((total, order) => {
@@ -114,7 +115,8 @@
     { key: 'picked_up_by_perusahaan', label: 'Dijemput' },
     { key: 'picked_up',             label: 'Dikonfirmasi UMKM' },
     { key: 'completed_by_perusahaan', label: 'Diselesaikan' },
-    { key: 'completed',             label: 'Selesai' }
+    { key: 'completed',             label: 'Selesai' },
+    { key: 'paid',                  label: 'Lunas' }
   ];
 
   onMount(async () => {
@@ -150,7 +152,7 @@
 
     // Fetch transactions for completed orders to show payment announcements
     const completedIds = (ordersRes.data || [])
-      .filter((o) => o.status === 'completed')
+      .filter((o) => o.status === 'completed' || o.status === 'paid')
       .map((o) => o.id);
     if (completedIds.length > 0) {
       const txRes = await getTransactionsByOrderIds(completedIds);
@@ -170,14 +172,38 @@
 
     loading = false;
 
-    // Auto-refresh orders every 3s
+    // Auto-refresh orders & payments every 3s
     interval = setInterval(async () => {
       const { data: { session: s } } = await supabase.auth.getSession();
       if (!s) return;
-      const { data } = await getOrdersAsUmkm(s.user.id);
-      if (data) {
-        orders = data;
-        watchRemoteChanges(data);
+      const [ordersRes, paymentsRes] = await Promise.all([
+        getOrdersAsUmkm(s.user.id),
+        getPaymentsForUmkm(s.user.id),
+      ]);
+      if (ordersRes.data) {
+        orders = ordersRes.data;
+        watchRemoteChanges(ordersRes.data);
+
+        // Refresh transactions for completed/paid orders
+        const txIds = ordersRes.data
+          .filter((o) => o.status === 'completed' || o.status === 'paid')
+          .map((o) => o.id);
+        if (txIds.length > 0) {
+          const txRes = await getTransactionsByOrderIds(txIds);
+          if (txRes.data) {
+            const map = {};
+            for (const tx of txRes.data) {
+              map[tx.order_id] = tx;
+            }
+            transactionsMap = map;
+          }
+        }
+      }
+      if (paymentsRes.data) {
+        incomingPayments = paymentsRes.data;
+        totalReceived = paymentsRes.data
+          .filter(p => p.status === 'confirmed' || p.status === 'paid')
+          .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
       }
     }, 3000);
   });
@@ -197,6 +223,7 @@
       available: 'badge-success',
       claimed: 'badge-info',
       completed: 'badge-success',
+      paid: 'badge-success',
       cancelled: 'badge-danger',
       pending: 'badge-warning',
       confirmed: 'badge-info',
@@ -217,6 +244,7 @@
       confirmed: 'Dikonfirmasi',
       picked_up: 'Sudah Dijemput',
       completed: 'Selesai',
+      paid: 'Lunas',
       cancelled: 'Dibatalkan',
       confirmed_by_umkm: 'Disetujui UMKM',
       picked_up_by_perusahaan: 'Dijemput Perusahaan',
@@ -505,7 +533,7 @@
               {/if}
 
               <!-- Payment announcement badge for completed orders -->
-              {#if order.status === 'completed' && transactionsMap[order.id]}
+              {#if order.status === 'paid' && transactionsMap[order.id]}
                 {@const tx = transactionsMap[order.id]}
                 <div class="mt-4 flex justify-center">
                   <div class="alert-success w-full">

@@ -77,7 +77,7 @@
   /** Fetch payment confirmations for given orders to know which are paid */
   async function loadPaymentStatus(orderList) {
     const paidIds = orderList
-      .filter(o => o.status === 'completed' || o.status === 'completed_by_perusahaan')
+      .filter(o => o.status === 'completed' || o.status === 'completed_by_perusahaan' || o.status === 'paid')
       .map(o => o.id);
     if (paidIds.length === 0) { paidOrdersMap = {}; return; }
 
@@ -93,7 +93,7 @@
   }
 
   let activeOrdersMap = $derived.by(() => {
-    const active = orders.filter(o => o.status !== 'cancelled' && o.status !== 'completed');
+    const active = orders.filter(o => o.status !== 'cancelled' && o.status !== 'completed' && o.status !== 'paid');
     return active
       .filter(o => o.oil_listings?.latitude != null && o.oil_listings?.longitude != null)
       .map(o => ({
@@ -116,7 +116,8 @@
     { key: 'picked_up_by_perusahaan', label: 'Dijemput' },
     { key: 'picked_up',             label: 'Dikonfirmasi UMKM' },
     { key: 'completed_by_perusahaan', label: 'Diselesaikan' },
-    { key: 'completed',             label: 'Selesai' }
+    { key: 'completed',             label: 'Selesai' },
+    { key: 'paid',                  label: 'Lunas' }
   ];
 
   onMount(async () => {
@@ -136,7 +137,7 @@
 
     // Fetch transactions for completed orders to show payment announcements
     const completedIds = (res.data || [])
-      .filter((o) => o.status === 'completed')
+      .filter((o) => o.status === 'completed' || o.status === 'paid')
       .map((o) => o.id);
     if (completedIds.length > 0) {
       const txRes = await getTransactionsByOrderIds(completedIds);
@@ -168,6 +169,21 @@
         orders = data;
         await loadPaymentStatus(data);
         watchRemoteChanges(data);
+
+        // Refresh transactions for completed/paid orders
+        const txIds = (data || [])
+          .filter((o) => o.status === 'completed' || o.status === 'paid')
+          .map((o) => o.id);
+        if (txIds.length > 0) {
+          const txRes = await getTransactionsByOrderIds(txIds);
+          if (txRes.data) {
+            const map = {};
+            for (const tx of txRes.data) {
+              map[tx.order_id] = tx;
+            }
+            transactionsMap = map;
+          }
+        }
       }
     }, 3000);
   });
@@ -216,7 +232,7 @@
       actual_liters: actualLiters,
       total_price: actualLiters * pricePerLiter,
       payment_method: 'transfer',
-      payment_status: 'paid'
+      payment_status: 'pending'
     });
 
     if (txErr) {
@@ -297,6 +313,7 @@
       confirmed: 'badge-info',
       picked_up: 'badge-success',
       completed: 'badge-success',
+      paid: 'badge-success',
       cancelled: 'badge-danger',
       confirmed_by_umkm: 'badge-warning',
       picked_up_by_perusahaan: 'badge-info',
@@ -312,6 +329,7 @@
       confirmed: 'Pickup dikonfirmasi',
       picked_up: 'Minyak sudah dijemput',
       completed: 'Selesai',
+      paid: 'Lunas',
       cancelled: 'Dibatalkan',
       confirmed_by_umkm: 'Disetujui UMKM',
       picked_up_by_perusahaan: 'Dijemput Perusahaan',
@@ -464,7 +482,7 @@
           {/if}
 
           <!-- Payment announcement badge for completed orders -->
-          {#if (order.status === 'completed' || order.status === 'completed_by_perusahaan') && transactionsMap[order.id]}
+          {#if (order.status === 'paid') && transactionsMap[order.id]}
             {@const tx = transactionsMap[order.id]}
             <div class="mb-4 flex justify-center">
               <div class="alert-success w-full">
@@ -541,8 +559,8 @@
               Chat
             </button>
 
-            {#if order.status === 'completed' || order.status === 'completed_by_perusahaan'}
-              {#if paidOrdersMap[order.id]}
+            {#if order.status === 'completed' || order.status === 'completed_by_perusahaan' || order.status === 'paid'}
+              {#if order.status === 'paid' || paidOrdersMap[order.id]}
                 <!-- Already paid -->
                 <span class="badge-success inline-flex items-center gap-1 btn-sm">
                   <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#check"/></svg>

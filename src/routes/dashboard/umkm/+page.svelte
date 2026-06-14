@@ -45,6 +45,7 @@
     'confirmed_by_umkm': { to: 'confirmed',         type: 'success', title: 'Pickup Dikonfirmasi',          msg: 'Perusahaan telah mengkonfirmasi pickup.' },
     'confirmed':         { to: 'picked_up_by_perusahaan', type: 'success', title: 'Minyak Sedang Dijemput',         msg: 'Perusahaan sedang dalam perjalanan menjemput minyak.' },
     'picked_up':         { to: 'completed_by_perusahaan', type: 'success', title: 'Pesanan Diselesaikan Perusahaan', msg: 'Perusahaan telah menyelesaikan pesanan. Konfirmasi sekarang.' },
+    'completed':         { to: 'paid',                    type: 'success', title: 'Pembayaran Diterima',            msg: 'Perusahaan telah melakukan pembayaran.' },
     'picked_up_by_perusahaan': { to: 'cancelled',   type: 'error',   title: 'Pesanan Dibatalkan',           msg: 'Perusahaan membatalkan pesanan.' },
   };
 
@@ -156,14 +157,14 @@
     const pointsRes = await getPointsBalance(session.user.id);
     pointsBalance = pointsRes.data?.balance || 0;
 
-    const completedTx = orders.filter(o => o.status === 'completed');
+    const completedTx = orders.filter(o => o.status === 'completed' || o.status === 'paid');
     const totalEarnings = completedTx.reduce((sum, o) => {
       return sum + (parseFloat(o.requested_liters) * 8000); // estimasi Rp 8k/liter
     }, 0);
 
     stats = {
       totalListings: listings.length,
-      activeOrders: orders.filter(o => !['completed','cancelled'].includes(o.status)).length,
+      activeOrders: orders.filter(o => !['completed','paid','cancelled'].includes(o.status)).length,
       totalEarnings
     };
 
@@ -193,6 +194,7 @@
       'available': 'badge-success',
       'claimed': 'badge-info',
       'completed': 'badge-success',
+      'paid': 'badge-success',
       'cancelled': 'badge-danger',
       'pending': 'badge-warning',
       'confirmed': 'badge-info',
@@ -212,6 +214,7 @@
       'confirmed': 'Dikonfirmasi',
       'picked_up': 'Sudah Dijemput',
       'completed': 'Selesai',
+      'paid': 'Lunas',
       'cancelled': 'Dibatalkan',
       'confirmed_by_umkm': 'Disetujui UMKM',
       'picked_up_by_perusahaan': 'Dijemput Perusahaan',
@@ -308,7 +311,7 @@
           <h2 class="order-card-title">Pesanan Masuk</h2>
         </div>
       </div>
-      {#if orders.filter(o => !['completed','cancelled'].includes(o.status)).length === 0}
+      {#if orders.filter(o => !['completed','paid','cancelled'].includes(o.status)).length === 0}
         <div class="empty-state py-8">
           <svg class="empty-state-icon w-12 h-12"><use href="/icons.svg#package"/></svg>
           <p class="empty-state-title">Belum ada pesanan</p>
@@ -316,7 +319,7 @@
         </div>
       {:else}
         <div class="space-y-3">
-          {#each orders.filter(o => !['completed','cancelled'].includes(o.status)) as order}
+          {#each orders.filter(o => !['completed','paid','cancelled'].includes(o.status)) as order}
             <div class="flex items-center justify-between border-b border-earth-300/50 pb-3 last:border-0 last:pb-0">
               <div class="flex items-start gap-3">
                 <div class="w-8 h-8 rounded-full bg-gold-200/50 flex items-center justify-center flex-shrink-0">

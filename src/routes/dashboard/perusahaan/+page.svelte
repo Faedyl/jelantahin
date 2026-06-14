@@ -74,7 +74,7 @@
     for (const o of orders) snap[o.id] = o.status;
     orderStatusSnapshot = snap;
 
-    const active = orders.filter(o => !['completed','cancelled'].includes(o.status));
+    const active = orders.filter(o => !['completed','paid','cancelled'].includes(o.status));
     const totalLiters = orders.reduce((sum, o) => sum + parseFloat(o.requested_liters || 0), 0);
 
     stats = { totalOrders: orders.length, activeOrders: active.length, totalLiters };
@@ -89,7 +89,7 @@
         orders = data;
         watchRemoteChanges(data);
         // Refresh stats too
-        const activeOrders = data.filter(o => !['completed','cancelled'].includes(o.status));
+        const activeOrders = data.filter(o => !['completed','paid','cancelled'].includes(o.status));
         const totalL = data.reduce((sum, o) => sum + parseFloat(o.requested_liters || 0), 0);
         stats = { totalOrders: data.length, activeOrders: activeOrders.length, totalLiters: totalL };
       }
@@ -99,7 +99,7 @@
   onDestroy(() => clearInterval(interval));
 
   function statusBadge(s) {
-    const map = { 'pending':'badge-warning','confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','cancelled':'badge-danger','confirmed_by_umkm':'badge-warning','picked_up_by_perusahaan':'badge-info','completed_by_perusahaan':'badge-info' };
+    const map = { 'pending':'badge-warning','confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','paid':'badge-success','cancelled':'badge-danger','confirmed_by_umkm':'badge-warning','picked_up_by_perusahaan':'badge-info','completed_by_perusahaan':'badge-info' };
     return map[s] || 'badge-default';
   }
 
@@ -109,6 +109,7 @@
       'confirmed': 'Dikonfirmasi',
       'picked_up': 'Sudah Dijemput',
       'completed': 'Selesai',
+      'paid': 'Lunas',
       'cancelled': 'Dibatalkan',
       'confirmed_by_umkm': 'Disetujui UMKM',
       'picked_up_by_perusahaan': 'Dijemput Perusahaan',
@@ -157,7 +158,7 @@
         <p class="text-sm text-earth-600">Belum ada pesanan. Mulai dengan mencari listing minyak.</p>
       {:else}
         <div class="divide-y divide-earth-200/60">
-          {#each orders.filter(o => !['completed','cancelled'].includes(o.status)) as order}
+          {#each orders.filter(o => !['completed','paid','cancelled'].includes(o.status)) as order}
             <div class="flex items-center justify-between py-3">
               <div>
                 <p class="text-sm font-medium text-earth-900">

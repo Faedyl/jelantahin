@@ -42,6 +42,7 @@
     { from: 'confirmed_by_umkm', to: 'confirmed',               type: 'success', title: 'Pickup Dikonfirmasi',            msg: 'Perusahaan telah mengkonfirmasi pickup.' },
     { from: 'confirmed',         to: 'picked_up_by_perusahaan',  type: 'success', title: 'Minyak Sedang Dijemput',        msg: 'Perusahaan sedang dalam perjalanan menjemput minyak.' },
     { from: 'picked_up',         to: 'completed_by_perusahaan',  type: 'success', title: 'Pesanan Diselesaikan Perusahaan', msg: 'Perusahaan telah menyelesaikan pesanan. Konfirmasi sekarang.' },
+    { from: 'completed',         to: 'paid',                      type: 'success', title: 'Pembayaran Diterima',            msg: 'Perusahaan telah melakukan pembayaran.' },
     { from: 'picked_up_by_perusahaan', to: 'cancelled',          type: 'error',   title: 'Pesanan Dibatalkan',            msg: 'Perusahaan membatalkan pesanan.' },
   ];
 
@@ -80,12 +81,12 @@
       const orders = ordersRes.data || [];
       allOrders = orders;
       recentListings = listings.slice(0, 4);
-      recentOrders = orders.filter(o => !['completed','cancelled'].includes(o.status)).slice(0, 4);
-      const completedTx = orders.filter(o => o.status === 'completed');
+      recentOrders = orders.filter(o => !['completed','paid','cancelled'].includes(o.status)).slice(0, 4);
+      const completedTx = orders.filter(o => o.status === 'completed' || o.status === 'paid');
       const earnings = completedTx.reduce((sum, o) => sum + (parseFloat(o.requested_liters || 0) * 8000), 0);
       umkmStats = {
         listings: listings.length,
-        activeOrders: orders.filter(o => !['completed','cancelled'].includes(o.status)).length,
+        activeOrders: orders.filter(o => !['completed','paid','cancelled'].includes(o.status)).length,
         earnings,
         points: pointsRes.data?.balance || 0,
       };
@@ -93,9 +94,9 @@
       const ordersRes = await getOrdersAsPerusahaan(session.user.id);
       const orders = ordersRes.data || [];
       allOrders = orders;
-      recentOrders = orders.filter(o => !['completed','cancelled'].includes(o.status)).slice(0, 4);
+      recentOrders = orders.filter(o => !['completed','paid','cancelled'].includes(o.status)).slice(0, 4);
       const totalLiters = orders.reduce((sum, o) => sum + parseFloat(o.requested_liters || 0), 0);
-      perusahaanStats = { orders: orders.length, activeOrders: orders.filter(o => !['completed','cancelled'].includes(o.status)).length, totalLiters };
+      perusahaanStats = { orders: orders.length, activeOrders: orders.filter(o => !['completed','paid','cancelled'].includes(o.status)).length, totalLiters };
     }
 
     // Init snapshot for remote change detection
@@ -116,7 +117,7 @@
       if (fresh) {
         allOrders = fresh;
         // Update the display slice
-        const active = fresh.filter(o => !['completed','cancelled'].includes(o.status));
+        const active = fresh.filter(o => !['completed','paid','cancelled'].includes(o.status));
         const sliced = active.slice(0, 4);
         recentOrders = sliced;
         watchRemoteChanges(fresh, role);
@@ -136,7 +137,7 @@
   function statusBadge(s) {
     const map = {
       'available':'badge-success','claimed':'badge-info','pending':'badge-warning',
-      'confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','cancelled':'badge-danger',
+      'confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','paid':'badge-success','cancelled':'badge-danger',
       'confirmed_by_umkm':'badge-warning','picked_up_by_perusahaan':'badge-info','completed_by_perusahaan':'badge-info'
     };
     return map[s] || 'badge-default';
@@ -150,6 +151,7 @@
       'confirmed': 'Dikonfirmasi',
       'picked_up': 'Sudah Dijemput',
       'completed': 'Selesai',
+      'paid': 'Lunas',
       'cancelled': 'Dibatalkan',
       'confirmed_by_umkm': 'Disetujui UMKM',
       'picked_up_by_perusahaan': 'Dijemput Perusahaan',

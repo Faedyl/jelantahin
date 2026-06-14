@@ -81,9 +81,9 @@
   let adminFeeAmount = $derived(subtotal * (adminFeePercent / 100));
   let totalToPay = $derived(subtotal + adminFeeAmount);
 
-  // Check if already paid
+  // Check if already paid (via payment_confirmations or order status)
   let alreadyPaid = $derived(
-    orderPayments.some(p => p.status === 'confirmed' || p.status === 'paid')
+    orderPayments.some(p => p.status === 'confirmed' || p.status === 'paid') || order?.status === 'paid'
   );
 
   async function handleOrderPayment() {
