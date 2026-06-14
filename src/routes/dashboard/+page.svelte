@@ -148,7 +148,7 @@
       <!-- Content grid -->
       <div class="grid gap-6 lg:grid-cols-3">
         <!-- Quick actions -->
-        <div class="card p-5 lg:col-span-1">
+        <div class="card p-5 lg:col-span-1 min-w-0">
           <h2 class="font-semibold text-earth-900 mb-4 font-display">Aksi Cepat</h2>
           <div class="space-y-2.5">
             <a href="/dashboard/umkm/listing" class="btn-primary w-full btn-sm justify-start">
@@ -171,7 +171,7 @@
         </div>
 
         <!-- Recent orders -->
-        <div class="card p-5 lg:col-span-2">
+        <div class="card p-5 lg:col-span-2 min-w-0">
           <div class="flex items-center justify-between mb-4">
             <h2 class="font-semibold text-earth-900 font-display">Pesanan Masuk</h2>
             <a href="/dashboard/umkm" class="text-xs font-medium text-gold-600 hover:text-gold-700 transition-colors inline-flex items-center gap-1">
@@ -187,7 +187,7 @@
           {:else}
             <div class="space-y-2">
               {#each recentOrders as order}
-                <div class="flex items-center justify-between rounded-md p-3 -mx-1 hover:bg-earth-100 transition-colors">
+                <div class="flex items-center justify-between rounded-md p-3 -mx-1 hover:bg-earth-100 transition-colors gap-2">
                   <div class="min-w-0">
                     <p class="text-sm font-medium text-earth-900 truncate">
                       #{shortId(order.id)} — {order.requested_liters}L
@@ -196,7 +196,7 @@
                       {new Date(order.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short' })}
                     </p>
                   </div>
-                  <span class="{statusBadge(order.status)} text-xs">{statusLabel(order.status)}</span>
+                  <span class="{statusBadge(order.status)} text-xs flex-shrink-0">{statusLabel(order.status)}</span>
                 </div>
               {/each}
             </div>
@@ -252,7 +252,7 @@
 
       <!-- Quick actions + content -->
       <div class="grid gap-6 lg:grid-cols-3">
-        <div class="card p-5 lg:col-span-1">
+        <div class="card p-5 lg:col-span-1 min-w-0">
           <h2 class="font-semibold text-earth-900 mb-4 font-display">Aksi Cepat</h2>
           <div class="space-y-2.5">
             <a href="/dashboard/perusahaan/browse" class="btn-primary w-full btn-sm justify-start">
@@ -270,7 +270,7 @@
           </div>
         </div>
 
-        <div class="card p-5 lg:col-span-2">
+        <div class="card p-5 lg:col-span-2 min-w-0">
           <div class="flex items-center justify-between mb-4">
             <h2 class="font-semibold text-earth-900 font-display">Pesanan Aktif</h2>
             <a href="/dashboard/perusahaan/orders" class="text-xs font-medium text-gold-600 hover:text-gold-700 transition-colors inline-flex items-center gap-1">
@@ -286,7 +286,7 @@
           {:else}
             <div class="space-y-2">
               {#each recentOrders as order}
-                <div class="flex items-center justify-between rounded-md p-3 -mx-1 hover:bg-earth-100 transition-colors">
+                <div class="flex items-center justify-between rounded-md p-3 -mx-1 hover:bg-earth-100 transition-colors gap-2">
                   <div class="min-w-0">
                     <p class="text-sm font-medium text-earth-900 truncate">
                       #{shortId(order.id)} — {order.requested_liters}L
@@ -299,7 +299,7 @@
                       {#if order.pickup_date} • Jemput: {new Date(order.pickup_date).toLocaleDateString('id-ID', { day:'numeric', month:'short' })}{/if}
                     </p>
                   </div>
-                  <span class="{statusBadge(order.status)} text-xs">{statusLabel(order.status)}</span>
+                  <span class="{statusBadge(order.status)} text-xs flex-shrink-0">{statusLabel(order.status)}</span>
                 </div>
               {/each}
             </div>
@@ -333,9 +333,9 @@
           </div>
         {/if}
         {#if profile.address}
-          <div class="flex justify-between py-1.5 border-b border-earth-200/60">
-            <span class="text-earth-600">Alamat</span>
-            <span class="text-right max-w-xs">{profile.address}</span>
+          <div class="flex justify-between gap-2 py-1.5 border-b border-earth-200/60">
+            <span class="text-earth-600 flex-shrink-0">Alamat</span>
+            <span class="text-right break-words max-w-[60%]">{profile.address}</span>
           </div>
         {/if}
         {#if profile.umkm_name}
