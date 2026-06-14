@@ -1,8 +1,9 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
   import { getProfile, getMyListings, getOrdersAsUmkm, getOrdersAsPerusahaan, getPointsBalance } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
+  import NotificationPopup from '$lib/NotificationPopup.svelte';
 
   let profile = $state(null);
   let loading = $state(true);
@@ -13,6 +14,53 @@
   let perusahaanStats = $state({ orders: 0, activeOrders: 0, totalLiters: 0 });
   let recentOrders = $state([]);
   let recentListings = $state([]);
+
+  /** All orders (for polling + snapshot, not sliced) */
+  let allOrders = $state([]);
+
+  /** Notification popup state */
+  let notification = $state(null);
+  let orderStatusSnapshot = $state({});
+  let interval;
+
+  function showNotification(type, title, message) {
+    notification = { type, title, message, noSound: true };
+  }
+
+  function dismissNotification() {
+    notification = null;
+  }
+
+  /** Custom transitions per role — shared by watchRemoteChanges */
+  const umkmToPerusahaan = [
+    { from: 'pending', to: 'confirmed_by_umkm',     type: 'success', title: 'Pesanan Diterima UMKM',         msg: 'UMKM telah menerima pesanan pickup.' },
+    { from: 'picked_up_by_perusahaan', to: 'picked_up',           type: 'success', title: 'Penjemputan Dikonfirmasi UMKM', msg: 'UMKM mengkonfirmasi minyak telah dijemput.' },
+    { from: 'completed_by_perusahaan', to: 'completed',           type: 'success', title: 'Pesanan Selesai',               msg: 'UMKM telah menyelesaikan pesanan.' },
+    { from: 'pending', to: 'cancelled',              type: 'error',   title: 'Pesanan Dibatalkan UMKM',       msg: 'UMKM membatalkan pesanan.' },
+  ];
+  const perusahaanToUmkm = [
+    { from: 'confirmed_by_umkm', to: 'confirmed',               type: 'success', title: 'Pickup Dikonfirmasi',            msg: 'Perusahaan telah mengkonfirmasi pickup.' },
+    { from: 'confirmed',         to: 'picked_up_by_perusahaan',  type: 'success', title: 'Minyak Sedang Dijemput',        msg: 'Perusahaan sedang dalam perjalanan menjemput minyak.' },
+    { from: 'picked_up',         to: 'completed_by_perusahaan',  type: 'success', title: 'Pesanan Diselesaikan Perusahaan', msg: 'Perusahaan telah menyelesaikan pesanan. Konfirmasi sekarang.' },
+    { from: 'picked_up_by_perusahaan', to: 'cancelled',          type: 'error',   title: 'Pesanan Dibatalkan',            msg: 'Perusahaan membatalkan pesanan.' },
+  ];
+
+  function watchRemoteChanges(currentOrders, role) {
+    const transitions = role === 'umkm' ? perusahaanToUmkm : umkmToPerusahaan;
+    for (const order of currentOrders) {
+      const oldStatus = orderStatusSnapshot[order.id];
+      const newStatus = order.status;
+      if (!oldStatus || oldStatus === newStatus) continue;
+      const match = transitions.find(t => t.from === oldStatus && t.to === newStatus);
+      if (match) {
+        showNotification(match.type, match.title, match.msg);
+        notification.noSound = false;
+      }
+    }
+    const snap = {};
+    for (const o of currentOrders) snap[o.id] = o.status;
+    orderStatusSnapshot = snap;
+  }
 
   onMount(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -30,6 +78,7 @@
       ]);
       const listings = listingsRes.data || [];
       const orders = ordersRes.data || [];
+      allOrders = orders;
       recentListings = listings.slice(0, 4);
       recentOrders = orders.filter(o => !['completed','cancelled'].includes(o.status)).slice(0, 4);
       const completedTx = orders.filter(o => o.status === 'completed');
@@ -43,14 +92,46 @@
     } else if (data.role === 'perusahaan') {
       const ordersRes = await getOrdersAsPerusahaan(session.user.id);
       const orders = ordersRes.data || [];
+      allOrders = orders;
       recentOrders = orders.filter(o => !['completed','cancelled'].includes(o.status)).slice(0, 4);
       const totalLiters = orders.reduce((sum, o) => sum + parseFloat(o.requested_liters || 0), 0);
       perusahaanStats = { orders: orders.length, activeOrders: orders.filter(o => !['completed','cancelled'].includes(o.status)).length, totalLiters };
     }
 
+    // Init snapshot for remote change detection
+    const snap = {};
+    for (const o of allOrders) snap[o.id] = o.status;
+    orderStatusSnapshot = snap;
+
     dataLoaded = true;
     loading = false;
+
+    // Auto-refresh every 3s for remote sound delivery
+    const role = data.role;
+    interval = setInterval(async () => {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      if (!s) return;
+      const fn = role === 'umkm' ? getOrdersAsUmkm : getOrdersAsPerusahaan;
+      const { data: fresh } = await fn(s.user.id);
+      if (fresh) {
+        allOrders = fresh;
+        // Update the display slice
+        const active = fresh.filter(o => !['completed','cancelled'].includes(o.status));
+        const sliced = active.slice(0, 4);
+        recentOrders = sliced;
+        watchRemoteChanges(fresh, role);
+        // Update stats
+        if (role === 'umkm') {
+          umkmStats = { ...umkmStats, activeOrders: active.length };
+        } else {
+          const totalL = fresh.reduce((sum, o) => sum + parseFloat(o.requested_liters || 0), 0);
+          perusahaanStats = { orders: fresh.length, activeOrders: active.length, totalLiters: totalL };
+        }
+      }
+    }, 3000);
   });
+
+  onDestroy(() => clearInterval(interval));
 
   function statusBadge(s) {
     const map = {
@@ -365,4 +446,14 @@
       </div>
     </details>
   </div>
+{/if}
+
+{#if notification}
+  <NotificationPopup
+    type={notification.type}
+    title={notification.title}
+    message={notification.message}
+    noSound={notification.noSound}
+    ondismiss={dismissNotification}
+  />
 {/if}

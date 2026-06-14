@@ -1,13 +1,62 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
   import { getProfile, getOrdersAsPerusahaan } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
+  import NotificationPopup from '$lib/NotificationPopup.svelte';
 
   let profile = $state(null);
   let orders = $state([]);
   let stats = $state({ totalOrders: 0, activeOrders: 0, totalLiters: 0 });
   let loading = $state(true);
+  let interval;
+
+  /** Notification popup state */
+  let notification = $state(null);
+
+  /** Snapshot of order statuses to detect remote changes */
+  let orderStatusSnapshot = $state({});
+
+  function showNotification(type, title, message) {
+    notification = { type, title, message, noSound: true };
+  }
+
+  function dismissNotification() {
+    notification = null;
+  }
+
+  /** Update snapshot after local action to avoid polling re-trigger */
+  function updateSnapshot(orderId, newStatus) {
+    orderStatusSnapshot = { ...orderStatusSnapshot, [orderId]: newStatus };
+  }
+
+  /**
+   * Watch for status changes made by UMKM — plays sound for the involved party.
+   */
+  function watchRemoteChanges(currentOrders) {
+    for (const order of currentOrders) {
+      const oldStatus = orderStatusSnapshot[order.id];
+      const newStatus = order.status;
+      if (!oldStatus || oldStatus === newStatus) continue;
+
+      if (oldStatus === 'pending' && newStatus === 'cancelled') {
+        showNotification('error', 'Pesanan Dibatalkan UMKM', 'UMKM membatalkan pesanan.');
+        notification.noSound = false;
+      } else if (oldStatus === 'pending' && newStatus === 'confirmed_by_umkm') {
+        showNotification('success', 'Pesanan Diterima UMKM', 'UMKM telah menerima pesanan pickup.');
+        notification.noSound = false;
+      } else if (oldStatus === 'picked_up_by_perusahaan' && newStatus === 'picked_up') {
+        showNotification('success', 'Penjemputan Dikonfirmasi UMKM', 'UMKM mengkonfirmasi minyak telah dijemput.');
+        notification.noSound = false;
+      } else if (oldStatus === 'completed_by_perusahaan' && newStatus === 'completed') {
+        showNotification('success', 'Pesanan Selesai', 'UMKM telah menyelesaikan pesanan.');
+        notification.noSound = false;
+      }
+    }
+    const snap = {};
+    for (const o of currentOrders) snap[o.id] = o.status;
+    orderStatusSnapshot = snap;
+  }
 
   onMount(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -20,12 +69,34 @@
     const ordersRes = await getOrdersAsPerusahaan(session.user.id);
     orders = ordersRes.data || [];
 
+    // Init snapshot
+    const snap = {};
+    for (const o of orders) snap[o.id] = o.status;
+    orderStatusSnapshot = snap;
+
     const active = orders.filter(o => !['completed','cancelled'].includes(o.status));
     const totalLiters = orders.reduce((sum, o) => sum + parseFloat(o.requested_liters || 0), 0);
 
     stats = { totalOrders: orders.length, activeOrders: active.length, totalLiters };
     loading = false;
+
+    // Auto-refresh every 3s for remote change detection
+    interval = setInterval(async () => {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      if (!s) return;
+      const { data } = await getOrdersAsPerusahaan(s.user.id);
+      if (data) {
+        orders = data;
+        watchRemoteChanges(data);
+        // Refresh stats too
+        const activeOrders = data.filter(o => !['completed','cancelled'].includes(o.status));
+        const totalL = data.reduce((sum, o) => sum + parseFloat(o.requested_liters || 0), 0);
+        stats = { totalOrders: data.length, activeOrders: activeOrders.length, totalLiters: totalL };
+      }
+    }, 3000);
   });
+
+  onDestroy(() => clearInterval(interval));
 
   function statusBadge(s) {
     const map = { 'pending':'badge-warning','confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','cancelled':'badge-danger','confirmed_by_umkm':'badge-warning','picked_up_by_perusahaan':'badge-info','completed_by_perusahaan':'badge-info' };
@@ -104,4 +175,14 @@
       {/if}
     </div>
   </div>
+{/if}
+
+{#if notification}
+  <NotificationPopup
+    type={notification.type}
+    title={notification.title}
+    message={notification.message}
+    noSound={notification.noSound}
+    ondismiss={dismissNotification}
+  />
 {/if}
