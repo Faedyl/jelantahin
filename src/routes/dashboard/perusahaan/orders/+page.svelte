@@ -26,12 +26,43 @@
   /** Notification popup state */
   let notification = $state(null);
 
+  /** Snapshot of order statuses to detect remote changes */
+  let orderStatusSnapshot = $state({}); // {orderId: status}
+
   function showNotification(type, title, message) {
     notification = { type, title, message };
   }
 
   function dismissNotification() {
     notification = null;
+  }
+
+  /**
+   * Watch for status changes made by the OTHER party (UMKM)
+   * by comparing current orders with snapshot. Shows notification + sound.
+   */
+  function watchRemoteChanges(currentOrders) {
+    for (const order of currentOrders) {
+      const oldStatus = orderStatusSnapshot[order.id];
+      const newStatus = order.status;
+      if (!oldStatus || oldStatus === newStatus) continue;
+
+      // Check for UMKM-initiated transitions
+      // pending→cancelled is from UMKM; picked_up_by_perusahaan→cancelled is from Perusahaan (skip)
+      if (oldStatus === 'pending' && newStatus === 'cancelled') {
+        showNotification('error', 'Pesanan Dibatalkan UMKM', 'UMKM membatalkan pesanan.');
+      } else if (oldStatus === 'pending' && newStatus === 'confirmed_by_umkm') {
+        showNotification('success', 'Pesanan Diterima UMKM', 'UMKM telah menerima pesanan pickup.');
+      } else if (oldStatus === 'picked_up_by_perusahaan' && newStatus === 'picked_up') {
+        showNotification('success', 'Penjemputan Dikonfirmasi UMKM', 'UMKM mengkonfirmasi minyak telah dijemput.');
+      } else if (oldStatus === 'completed_by_perusahaan' && newStatus === 'completed') {
+        showNotification('success', 'Pesanan Selesai', 'UMKM telah menyelesaikan pesanan.');
+      }
+    }
+    // Update snapshot
+    const snap = {};
+    for (const o of currentOrders) snap[o.id] = o.status;
+    orderStatusSnapshot = snap;
   }
 
   /** Fetch payment confirmations for given orders to know which are paid */
@@ -112,6 +143,11 @@
     // Fetch payment confirmations to know which orders are already paid
     await loadPaymentStatus(res.data || []);
 
+    // Init snapshot for remote change detection
+    const snap = {};
+    for (const o of orders) snap[o.id] = o.status;
+    orderStatusSnapshot = snap;
+
     loading = false;
 
     // Auto-refresh orders every 3s
@@ -122,6 +158,7 @@
       if (data) {
         orders = data;
         await loadPaymentStatus(data);
+        watchRemoteChanges(data);
       }
     }, 3000);
   });

@@ -28,12 +28,43 @@
   /** Notification popup state */
   let notification = $state(null);
 
+  /** Snapshot of order statuses to detect remote changes */
+  let orderStatusSnapshot = $state({}); // {orderId: status}
+
   function showNotification(type, title, message) {
     notification = { type, title, message };
   }
 
   function dismissNotification() {
     notification = null;
+  }
+
+  /**
+   * Watch for status changes made by the OTHER party (Perusahaan)
+   * by comparing current orders with snapshot. Shows notification + sound.
+   */
+  const perusahaanTransitions = {
+    'confirmed_by_umkm': { to: 'confirmed',            type: 'success', title: 'Pickup Dikonfirmasi',          msg: 'Perusahaan telah mengkonfirmasi pickup.' },
+    'confirmed':         { to: 'picked_up_by_perusahaan', type: 'success', title: 'Minyak Sedang Dijemput',         msg: 'Perusahaan sedang dalam perjalanan menjemput minyak.' },
+    'picked_up':         { to: 'completed_by_perusahaan', type: 'success', title: 'Pesanan Diselesaikan Perusahaan', msg: 'Perusahaan telah menyelesaikan pesanan. Konfirmasi sekarang.' },
+    'picked_up_by_perusahaan': { to: 'cancelled',      type: 'error',   title: 'Pesanan Dibatalkan',           msg: 'Perusahaan membatalkan pesanan.' },
+  };
+
+  function watchRemoteChanges(currentOrders) {
+    for (const order of currentOrders) {
+      const oldStatus = orderStatusSnapshot[order.id];
+      const newStatus = order.status;
+      if (!oldStatus || oldStatus === newStatus) continue;
+
+      const match = perusahaanTransitions[oldStatus];
+      if (match && match.to === newStatus) {
+        showNotification(match.type, match.title, match.msg);
+      }
+    }
+    // Update snapshot
+    const snap = {};
+    for (const o of currentOrders) snap[o.id] = o.status;
+    orderStatusSnapshot = snap;
   }
 
   function setTab(value) {
@@ -126,6 +157,11 @@
       }
     }
 
+    // Init snapshot for remote change detection
+    const snap = {};
+    for (const o of orders) snap[o.id] = o.status;
+    orderStatusSnapshot = snap;
+
     loading = false;
 
     // Auto-refresh orders every 3s
@@ -133,7 +169,10 @@
       const { data: { session: s } } = await supabase.auth.getSession();
       if (!s) return;
       const { data } = await getOrdersAsUmkm(s.user.id);
-      if (data) orders = data;
+      if (data) {
+        orders = data;
+        watchRemoteChanges(data);
+      }
     }, 3000);
   });
 
