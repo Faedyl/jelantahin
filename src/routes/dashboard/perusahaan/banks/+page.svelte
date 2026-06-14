@@ -132,7 +132,7 @@
 </script>
 
 <div class="page-container py-8">
-  <div class="page-header flex items-center justify-between">
+  <div class="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
       <h1 class="page-title flex items-center gap-2">
         <svg class="icon w-6 h-6"><use href="/icons.svg#bank"/></svg>

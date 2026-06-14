@@ -51,7 +51,7 @@
   <div class="flex min-h-[40vh] items-center justify-center"><p class="text-earth-600">Memuat...</p></div>
 {:else}
   <div class="page-container py-8">
-    <div class="page-header flex items-center justify-between">
+    <div class="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="page-title">Dashboard Perusahaan</h1>
         <p class="page-subtitle">Cari dan klaim minyak jelantah dari UMKM</p>
