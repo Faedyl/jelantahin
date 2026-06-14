@@ -290,6 +290,7 @@
   .page-container {
     @apply mx-auto w-full px-4 sm:px-6 lg:px-8;
     max-width: 1200px;
+    overflow-wrap: break-word;
   }
 
   .page-container-narrow {
@@ -333,6 +334,7 @@
     @apply flex gap-0 overflow-x-auto pb-2 md:grid md:grid-cols-7 md:gap-1;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    max-width: 100%;
   }
   .step-tracker::-webkit-scrollbar {
     display: none;
@@ -393,7 +395,7 @@
   }
 
   .order-card-address {
-    @apply rounded-lg bg-herb-100/60 p-3 text-xs text-earth-800 mb-3;
+    @apply rounded-lg bg-herb-100/60 p-3 text-xs text-earth-800 mb-3 break-words;
   }
 
   .order-card-actions {

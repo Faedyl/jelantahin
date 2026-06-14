@@ -140,7 +140,7 @@
   </nav>
 
   <!-- ═══ Main Content ═══ -->
-  <main class="min-h-[calc(100vh-4rem)] bg-earth-200">
+  <main class="min-h-[calc(100vh-4rem)] bg-earth-200 overflow-x-hidden">
     {@render children()}
   </main>
 
