@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D4A40D"/>
+      <stop offset="100%" stop-color="#8A6F0A"/>
+    </linearGradient>
+  </defs>
+  <!-- Leaf (sustainability / nature) -->
+  <path d="M200 50 C260 50 310 100 310 180 C310 260 260 310 200 350 C200 350 200 350 200 350Z"
+        fill="url(#g)" opacity="0.15"/>
+  <!-- Oil droplet (the core product) -->
+  <path d="M200 80 C260 150 290 200 290 250 C290 300 250 340 200 340 C150 340 110 300 110 250 C110 200 140 150 200 80Z"
+        fill="url(#g)"/>
+  <!-- Inner highlight (reflection on oil surface) -->
+  <ellipse cx="175" cy="230" rx="35" ry="50"
+           fill="white" opacity="0.15"
+           transform="rotate(-20 175 230)"/>
+  <!-- Circular economy arc (flow line) -->
+  <path d="M140 120 C90 160 70 220 80 280"
+        stroke="#D4A40D" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.4"/>
+  <path d="M260 120 C310 160 330 220 320 280"
+        stroke="#D4A40D" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.4"/>
+  <!-- Small accent dots (particles / value) -->
+  <circle cx="115" cy="145" r="4" fill="#EBC245" opacity="0.6"/>
+  <circle cx="285" cy="145" r="4" fill="#EBC245" opacity="0.6"/>
+  <circle cx="95" cy="190" r="3" fill="#EBC245" opacity="0.4"/>
+  <circle cx="305" cy="190" r="3" fill="#EBC245" opacity="0.4"/>
+</svg>

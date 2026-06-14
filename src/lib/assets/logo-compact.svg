@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 40" fill="none">
+  <!-- Mark -->
+  <g transform="translate(0, 5) scale(0.6)">
+    <path d="M20 12 C35 25 40 38 40 50 C40 62 32 70 20 70 C8 70 0 62 0 50 C0 38 5 25 20 12Z"
+          fill="#D4A40D"/>
+    <ellipse cx="14" cy="48" rx="7" ry="10" fill="white" opacity="0.12" transform="rotate(-20 14 48)"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="48" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#3A2E20" letter-spacing="-0.02em">
+    Jelantahin
+  </text>
+  <text x="48" y="37" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="500" fill="#7B6950" letter-spacing="0.05em" text-transform="uppercase">
+    Daur ulang minyak jelantah
+  </text>
+</svg>
