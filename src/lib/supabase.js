@@ -128,6 +128,24 @@ export async function getTransactionsForUser(userId) {
     .order("completed_at", { ascending: false });
 }
 
+/** Get transaction for a specific order (for payment announcement in chat) */
+export async function getTransactionByOrderId(orderId) {
+  return supabase
+    .from("transactions")
+    .select("*")
+    .eq("order_id", orderId)
+    .maybeSingle();
+}
+
+/** Get transactions for multiple order IDs (for showing payment announcements on order cards) */
+export async function getTransactionsByOrderIds(orderIds) {
+  if (!orderIds.length) return { data: [] };
+  return supabase
+    .from("transactions")
+    .select("*")
+    .in("order_id", orderIds);
+}
+
 // ─── Credit Coupon Points ─────────────────────────────────────
 
 export async function getPointsBalance(userId) {
@@ -422,4 +440,58 @@ export async function updatePlatformConfig(key, value) {
     .upsert({ key, value, updated_at: new Date().toISOString() })
     .select()
     .single();
+}
+
+// ─── Chat Messages (per order) ───────────────────────────────
+
+/** Get messages for a specific order, most recent first */
+export async function getChatMessages(orderId) {
+  return supabase
+    .from("chat_messages")
+    .select("*, profiles!chat_messages_sender_id_fkey(full_name, umkm_name, company_name, role)")
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: false });
+}
+
+/** Send a message in an order */
+export async function sendChatMessage({ orderId, senderId, message }) {
+  return supabase
+    .from("chat_messages")
+    .insert([{ order_id: orderId, sender_id: senderId, message }])
+    .select("*, profiles!chat_messages_sender_id_fkey(full_name, umkm_name, company_name, role)")
+    .single();
+}
+
+/** Subscribe to new messages for an order via Realtime */
+export function subscribeToChatMessages(orderId, onMessage) {
+  const channel = supabase
+    .channel(`chat:${orderId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "chat_messages",
+        filter: `order_id=eq.${orderId}`,
+      },
+      (payload) => {
+        // Fetch the full message with profile data
+        supabase
+          .from("chat_messages")
+          .select("*, profiles!chat_messages_sender_id_fkey(full_name, umkm_name, company_name, role)")
+          .eq("id", payload.new.id)
+          .single()
+          .then(({ data }) => {
+            if (data) onMessage(data);
+          });
+      }
+    )
+    .subscribe();
+
+  return channel;
+}
+
+/** Unsubscribe from a chat channel */
+export function unsubscribeFromChat(channel) {
+  if (channel) supabase.removeChannel(channel);
 }

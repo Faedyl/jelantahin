@@ -1,15 +1,18 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getOrdersAsPerusahaan, updateOrder, createTransaction } from '$lib/supabase.js';
+  import { getProfile, getOrdersAsPerusahaan, updateOrder, createTransaction, getTransactionsByOrderIds } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
+  import Chat from '$lib/Chat.svelte';
 
   let profile = $state(null);
   let orders = $state([]);
   let loading = $state(true);
   let actionLoading = $state(false);
   let error = $state('');
+  let chatOrderId = $state(null);
+  let transactionsMap = $state({}); // order_id -> transaction
 
   let activeOrdersMap = $derived.by(() => {
     const active = orders.filter(o => o.status !== 'cancelled' && o.status !== 'completed');
@@ -49,6 +52,22 @@
 
     const res = await getOrdersAsPerusahaan(session.user.id);
     orders = res.data || [];
+
+    // Fetch transactions for completed orders to show payment announcements
+    const completedIds = (res.data || [])
+      .filter((o) => o.status === 'completed')
+      .map((o) => o.id);
+    if (completedIds.length > 0) {
+      const txRes = await getTransactionsByOrderIds(completedIds);
+      if (txRes.data) {
+        const map = {};
+        for (const tx of txRes.data) {
+          map[tx.order_id] = tx;
+        }
+        transactionsMap = map;
+      }
+    }
+
     loading = false;
   });
 
@@ -91,7 +110,7 @@
     if (newStatus === 'completed' && order) {
       const pricePerLiter = parseFloat(order.oil_listings?.price_per_liter || 0);
 
-      const { error: txErr } = await createTransaction({
+      const { data: txData, error: txErr } = await createTransaction({
         order_id: orderId,
         actual_liters: actualLiters,
         total_price: actualLiters * pricePerLiter,
@@ -101,6 +120,11 @@
 
       if (txErr) {
         error = txErr.message;
+      }
+
+      // Update local transactions map so announcement shows immediately
+      if (txData) {
+        transactionsMap = { ...transactionsMap, [orderId]: txData };
       }
 
       // 🏆 Auto-earn points for UMKM: 1 liter = 10 poin
@@ -288,6 +312,23 @@
             </div>
           {/if}
 
+          <!-- Payment announcement badge for completed orders -->
+          {#if order.status === 'completed' && transactionsMap[order.id]}
+            {@const tx = transactionsMap[order.id]}
+            <div class="mb-4 flex justify-center">
+              <div class="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800 ring-1 ring-green-200">
+                <span class="text-lg">💰</span>
+                <div class="text-center">
+                  <p class="font-semibold">Pembayaran Telah Dikonfirmasi</p>
+                  <p class="text-xs text-green-600">
+                    {formatRupiah(tx.total_price)} —
+                    {new Date(tx.completed_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          {/if}
+
           {#if order.oil_listings}
             <div class="mb-3 rounded-lg bg-green-50 p-3 text-xs text-stone-700">
               <p>📍 {order.oil_listings.pickup_address}</p>
@@ -335,6 +376,13 @@
               </button>
             {/each}
 
+            <button
+              onclick={() => (chatOrderId = order.id)}
+              class="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1"
+            >
+              💬 Chat
+            </button>
+
             {#if order.status === 'completed'}
               <a
                 href="/dashboard/payment?order_id={order.id}"
@@ -349,3 +397,13 @@
     </div>
   {/if}
 </div>
+
+{#if chatOrderId && profile}
+  <Chat
+    orderId={chatOrderId}
+    currentUserId={profile.id}
+    currentUserName={profile.company_name || profile.full_name}
+    orderStatus={orders.find((o) => o.id === chatOrderId)?.status}
+    onclose={() => (chatOrderId = null)}
+  />
+{/if}

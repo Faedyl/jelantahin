@@ -1,15 +1,18 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getMyListings, getOrdersAsUmkm, getPaymentsForUmkm, getPointsBalance, ensurePointsAccount } from '$lib/supabase.js';
+  import { getProfile, getMyListings, getOrdersAsUmkm, getPaymentsForUmkm, getPointsBalance, ensurePointsAccount, getTransactionsByOrderIds } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
+  import Chat from '$lib/Chat.svelte';
 
   let profile = $state(null);
   let listings = $state([]);
   let orders = $state([]);
   let tab = $state('listings');
   let loading = $state(true);
+  let chatOrderId = $state(null);
+  let transactionsMap = $state({}); // order_id -> transaction
 
   let pointsBalance = $state(0);
   let incomingPayments = $state([]);
@@ -114,6 +117,22 @@
       .filter(p => p.status === 'confirmed' || p.status === 'paid')
       .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
     pointsBalance = pointsRes.data?.balance || 0;
+
+    // Fetch transactions for completed orders to show payment announcements
+    const completedIds = (ordersRes.data || [])
+      .filter((o) => o.status === 'completed')
+      .map((o) => o.id);
+    if (completedIds.length > 0) {
+      const txRes = await getTransactionsByOrderIds(completedIds);
+      if (txRes.data) {
+        const map = {};
+        for (const tx of txRes.data) {
+          map[tx.order_id] = tx;
+        }
+        transactionsMap = map;
+      }
+    }
+
     loading = false;
   });
 
@@ -363,6 +382,32 @@
                   Pickup ini telah dibatalkan.
                 </div>
               {/if}
+
+              <!-- Payment announcement badge for completed orders -->
+              {#if order.status === 'completed' && transactionsMap[order.id]}
+                {@const tx = transactionsMap[order.id]}
+                <div class="mt-4 flex justify-center">
+                  <div class="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800 ring-1 ring-green-200">
+                    <span class="text-lg">💰</span>
+                    <div class="text-center">
+                      <p class="font-semibold">Pembayaran Telah Dikonfirmasi</p>
+                      <p class="text-xs text-green-600">
+                        {formatRupiah(tx.total_price)} —
+                        {new Date(tx.completed_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              {/if}
+
+              <div class="mt-3">
+                <button
+                  onclick={() => (chatOrderId = order.id)}
+                  class="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1"
+                >
+                  💬 Chat
+                </button>
+              </div>
             </div>
           {/each}
         </div>
@@ -499,4 +544,14 @@
       </div>
     </div>
   </div>
+{/if}
+
+{#if chatOrderId && profile}
+  <Chat
+    orderId={chatOrderId}
+    currentUserId={profile.id}
+    currentUserName={profile.umkm_name || profile.full_name}
+    orderStatus={orders.find((o) => o.id === chatOrderId)?.status}
+    onclose={() => (chatOrderId = null)}
+  />
 {/if}
