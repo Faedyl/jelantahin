@@ -9,6 +9,7 @@
   import PromptModal from '$lib/PromptModal.svelte';
   import ConfirmModal from '$lib/ConfirmModal.svelte';
   import NotificationPopup from '$lib/NotificationPopup.svelte';
+  import StepTracker from '$lib/StepTracker.svelte';
 
   let profile = $state(null);
   let orders = $state([]);
@@ -109,16 +110,6 @@
       }));
   });
 
-  const trackingSteps = [
-    { key: 'pending',               label: 'Menunggu' },
-    { key: 'confirmed_by_umkm',     label: 'Disetujui' },
-    { key: 'confirmed',             label: 'Dikonfirmasi' },
-    { key: 'picked_up_by_perusahaan', label: 'Dijemput' },
-    { key: 'picked_up',             label: 'Dikonfirmasi UMKM' },
-    { key: 'completed_by_perusahaan', label: 'Diselesaikan' },
-    { key: 'completed',             label: 'Selesai' },
-    { key: 'paid',                  label: 'Lunas' }
-  ];
 
   onMount(async () => {
     const {
@@ -361,12 +352,7 @@
     return [];
   }
 
-  function stepIndex(status) {
-    if (status === 'cancelled') return -1;
-    return trackingSteps.findIndex((step) => step.key === status);
-  }
-
-  function formatRupiah(value) {
+function formatRupiah(value) {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -462,22 +448,7 @@
 
           {#if order.status !== 'cancelled'}
             <div class="card-flat p-4 mb-4">
-              <div class="step-tracker">
-                {#each trackingSteps as step, index}
-                  <div class="step-item">
-                    <div
-                      class="step-circle {index <= stepIndex(paidOrdersMap[order.id] ? 'paid' : order.status) ? 'step-circle-active' : 'step-circle-inactive'}"
-                    >
-                      {index + 1}
-                    </div>
-                    <p
-                      class="step-label {index <= stepIndex(paidOrdersMap[order.id] ? 'paid' : order.status) ? 'step-label-active' : 'step-label-inactive'}"
-                    >
-                      {step.label}
-                    </p>
-                  </div>
-                {/each}
-              </div>
+              <StepTracker status={order.status} isPaid={!!paidOrdersMap[order.id]} />
             </div>
           {/if}
 

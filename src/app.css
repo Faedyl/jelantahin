@@ -328,54 +328,6 @@
   }
 }
 
-/* ── Status step tracker (order progress) ──────────── */
-@layer components {
-  .step-tracker {
-    @apply flex gap-0 overflow-x-auto pb-2 md:grid md:grid-cols-7 md:gap-1;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    max-width: 100%;
-  }
-  .step-tracker::-webkit-scrollbar {
-    display: none;
-  }
-
-  .step-item {
-    @apply flex-shrink-0 text-center;
-    min-width: 80px;
-  }
-  @media (min-width: 768px) {
-    .step-item {
-      min-width: 0;
-    }
-  }
-
-  .step-circle {
-    @apply mx-auto mb-1 flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold font-display md:h-8 md:w-8 md:text-xs md:mb-2;
-    @apply transition-all duration-300;
-  }
-
-  .step-circle-active {
-    @apply bg-gold-500 text-white shadow-brand-sm;
-  }
-
-  .step-circle-inactive {
-    @apply bg-earth-300 text-earth-600;
-  }
-
-  .step-label {
-    @apply text-[10px] font-medium leading-tight md:text-[11px];
-  }
-
-  .step-label-active {
-    @apply text-gold-700 font-semibold;
-  }
-
-  .step-label-inactive {
-    @apply text-earth-500;
-  }
-}
-
 /* ── Order card ────────────────────────────────────── */
 @layer components {
   .order-card {

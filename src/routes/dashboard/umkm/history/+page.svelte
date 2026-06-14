@@ -8,6 +8,7 @@
   import Chat from '$lib/Chat.svelte';
   import ConfirmModal from '$lib/ConfirmModal.svelte';
   import NotificationPopup from '$lib/NotificationPopup.svelte';
+  import StepTracker from '$lib/StepTracker.svelte';
 
   let profile = $state(null);
   let listings = $state([]);
@@ -122,16 +123,7 @@
     }, 0)
   );
 
-  const trackingSteps = [
-    { key: 'pending',               label: 'Menunggu' },
-    { key: 'confirmed_by_umkm',     label: 'Disetujui' },
-    { key: 'confirmed',             label: 'Dikonfirmasi' },
-    { key: 'picked_up_by_perusahaan', label: 'Dijemput' },
-    { key: 'picked_up',             label: 'Dikonfirmasi UMKM' },
-    { key: 'completed_by_perusahaan', label: 'Diselesaikan' },
-    { key: 'completed',             label: 'Selesai' },
-    { key: 'paid',                  label: 'Lunas' }
-  ];
+
 
   onMount(async () => {
     const {
@@ -272,10 +264,7 @@
     return map[status] || status;
   }
 
-  function stepIndex(status) {
-    if (status === 'cancelled') return -1;
-    return trackingSteps.findIndex((step) => step.key === status);
-  }
+
 
   async function acceptOrder(orderId) {
     actionLoading = true;
@@ -526,22 +515,7 @@
 
               {#if order.status !== 'cancelled'}
                 <div class="card-flat p-4 mt-4">
-                  <div class="step-tracker">
-                    {#each trackingSteps as step, index}
-                      <div class="step-item">
-                        <div
-                          class="step-circle {index <= stepIndex(paidOrdersMap[order.id] ? 'paid' : order.status) ? 'step-circle-active' : 'step-circle-inactive'}"
-                        >
-                          {index + 1}
-                        </div>
-                        <p
-                          class="step-label {index <= stepIndex(paidOrdersMap[order.id] ? 'paid' : order.status) ? 'step-label-active' : 'step-label-inactive'}"
-                        >
-                          {step.label}
-                        </p>
-                      </div>
-                    {/each}
-                  </div>
+                  <StepTracker status={order.status} isPaid={!!paidOrdersMap[order.id]} />
                 </div>
               {:else}
                 <div class="alert-danger mt-3">
