@@ -19,6 +19,7 @@ export default {
         },
         /* Gold — Brand accent (existing jelantah palette extended) */
         gold: {
+          50:  '#FFFBEB',
           100: '#FEF7E4',
           200: '#FBEFC0',
           300: '#F5D980',
@@ -26,9 +27,12 @@ export default {
           500: '#D4A40D',
           600: '#AD8B0C',
           700: '#8A6F0A',
+          800: '#6B5508',
+          900: '#4A3B05',
         },
         /* Herb — Nature / Sustainability / Success */
         herb: {
+          50:  '#F3FAF6',
           100: '#E8F6ED',
           200: '#C8ECD3',
           300: '#9FD9AE',
@@ -36,6 +40,8 @@ export default {
           500: '#4FA862',
           600: '#3D8A4F',
           700: '#2D6A3B',
+          800: '#1E532A',
+          900: '#14361C',
         },
         /* Semantic */
         danger: '#C4443C',
