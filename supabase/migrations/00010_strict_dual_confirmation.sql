@@ -1,12 +1,15 @@
 -- ============================================================
--- jelantahin — Enforce role-gated order status transitions
--- Dual-confirmation flow:
---   pending → confirmed_by_umkm → confirmed → picked_up_by_perusahaan
---   → picked_up → completed_by_perusahaan → completed
--- Each step requires both parties to confirm.
+-- jelantahin — Enforce strict dual-confirmation status transitions
+-- Each confirmation step can only be done by the correct role.
+--   UMKM-only: pending→confirmed_by_umkm, pending→cancelled,
+--              picked_up_by_perusahaan→picked_up,
+--              completed_by_perusahaan→completed
+--   Perusahaan-only: confirmed_by_umkm→confirmed,
+--                    confirmed→picked_up_by_perusahaan,
+--                    picked_up_by_perusahaan→cancelled,
+--                    picked_up→completed_by_perusahaan
 -- ============================================================
 
--- Function: validate status transitions based on user role
 create or replace function public.check_order_status_transition()
 returns trigger
 language plpgsql
@@ -54,11 +57,3 @@ begin
   return new;
 end;
 $$;
-
--- Attach trigger to orders table
-drop trigger if exists trg_check_order_status_transition on public.orders;
-create trigger trg_check_order_status_transition
-  before update on public.orders
-  for each row
-  when (old.status is distinct from new.status)
-  execute function public.check_order_status_transition();

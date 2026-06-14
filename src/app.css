@@ -330,15 +330,26 @@
 /* ── Status step tracker (order progress) ──────────── */
 @layer components {
   .step-tracker {
-    @apply grid grid-cols-7 gap-1;
+    @apply flex gap-0 overflow-x-auto pb-2 md:grid md:grid-cols-7 md:gap-1;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .step-tracker::-webkit-scrollbar {
+    display: none;
   }
 
   .step-item {
-    @apply text-center;
+    @apply flex-shrink-0 text-center;
+    min-width: 80px;
+  }
+  @media (min-width: 768px) {
+    .step-item {
+      min-width: 0;
+    }
   }
 
   .step-circle {
-    @apply mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold font-display;
+    @apply mx-auto mb-1 flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold font-display md:h-8 md:w-8 md:text-xs md:mb-2;
     @apply transition-all duration-300;
   }
 
@@ -351,7 +362,7 @@
   }
 
   .step-label {
-    @apply text-[11px] font-medium;
+    @apply text-[10px] font-medium leading-tight md:text-[11px];
   }
 
   .step-label-active {

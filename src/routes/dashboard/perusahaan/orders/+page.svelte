@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
   import { getProfile, getOrdersAsPerusahaan, updateOrder, createTransaction, getTransactionsByOrderIds } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
@@ -18,6 +19,7 @@
   let completePromptOrderId = $state(null);
   let completePromptError = $state('');
   let cancelConfirmOrderId = $state(null);
+  let interval;
 
   let activeOrdersMap = $derived.by(() => {
     const active = orders.filter(o => o.status !== 'cancelled' && o.status !== 'completed');
@@ -77,7 +79,15 @@
     }
 
     loading = false;
+
+    // Auto-refresh orders every 10s
+    interval = setInterval(async () => {
+      const { data } = await getOrdersAsPerusahaan(session.user.id);
+      if (data) orders = data;
+    }, 10000);
   });
+
+  onDestroy(() => clearInterval(interval));
 
   function updateOrderStatus(orderId, newStatus) {
     if (newStatus === 'completed_by_perusahaan') {
@@ -220,17 +230,12 @@
 
     if (status === 'picked_up_by_perusahaan') {
       return [
-        { label: 'Konfirmasi Penjemputan', status: 'picked_up', cls: 'btn-primary' },
         { label: 'Batalkan', status: 'cancelled', cls: 'btn-danger' }
       ];
     }
 
     if (status === 'picked_up') {
       return [{ label: 'Verifikasi & Selesaikan', status: 'completed_by_perusahaan', cls: 'btn-primary' }];
-    }
-
-    if (status === 'completed_by_perusahaan') {
-      return [{ label: 'Selesaikan', status: 'completed', cls: 'btn-primary' }];
     }
 
     return [];

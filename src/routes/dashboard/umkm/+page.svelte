@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
   import { getProfile, getMyListings, getOrdersAsUmkm, updateOrder, getPointsBalance, ensurePointsAccount } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
@@ -12,34 +13,45 @@
   let stats = $state({ totalListings: 0, activeOrders: 0, totalEarnings: 0 });
   let loading = $state(true);
   let actionLoading = $state(false);
+  let error = $state('');
   let rejectConfirmOrderId = $state(null);
+  let interval;
 
   let pendingOrders = $derived(orders.filter(o => o.status === 'pending'));
   let pendingCount = $derived(pendingOrders.length);
 
   async function acceptOrder(orderId) {
     actionLoading = true;
-    const { error } = await updateOrder(orderId, { status: 'confirmed_by_umkm' });
+    error = '';
+    const { error: err } = await updateOrder(orderId, { status: 'confirmed_by_umkm' });
     actionLoading = false;
-    if (!error) {
+    if (err) {
+      error = err.message;
+    } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'confirmed_by_umkm' } : o);
     }
   }
 
   async function confirmPickup(orderId) {
     actionLoading = true;
-    const { error } = await updateOrder(orderId, { status: 'picked_up' });
+    error = '';
+    const { error: err } = await updateOrder(orderId, { status: 'picked_up' });
     actionLoading = false;
-    if (!error) {
+    if (err) {
+      error = err.message;
+    } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'picked_up' } : o);
     }
   }
 
   async function confirmCompleted(orderId) {
     actionLoading = true;
-    const { error } = await updateOrder(orderId, { status: 'completed' });
+    error = '';
+    const { error: err } = await updateOrder(orderId, { status: 'completed' });
     actionLoading = false;
-    if (!error) {
+    if (err) {
+      error = err.message;
+    } else {
       orders = orders.map(o => o.id === orderId ? { ...o, status: 'completed' } : o);
     }
   }
@@ -48,17 +60,19 @@
     rejectConfirmOrderId = orderId;
   }
 
-  function confirmReject() {
+  async function confirmReject() {
     const orderId = rejectConfirmOrderId;
     rejectConfirmOrderId = null;
     if (!orderId) return;
     actionLoading = true;
-    updateOrder(orderId, { status: 'cancelled' }).then(({ error }) => {
-      actionLoading = false;
-      if (!error) {
-        orders = orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o);
-      }
-    });
+    error = '';
+    const { error: err } = await updateOrder(orderId, { status: 'cancelled' });
+    actionLoading = false;
+    if (err) {
+      error = err.message;
+    } else {
+      orders = orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o);
+    }
   }
 
   onMount(async () => {
@@ -96,7 +110,15 @@
     };
 
     loading = false;
+
+    // Auto-refresh orders every 10s
+    interval = setInterval(async () => {
+      const { data } = await getOrdersAsUmkm(session.user.id);
+      if (data) orders = data;
+    }, 10000);
   });
+
+  onDestroy(() => clearInterval(interval));
 
   function statusBadge(status) {
     const map = {
@@ -138,6 +160,14 @@
   </div>
 {:else}
   <div class="page-container py-8">
+    <!-- Error Alert -->
+    {#if error}
+      <div class="alert-error mb-4">
+        <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#alert-circle"/></svg>
+        <span>{error}</span>
+      </div>
+    {/if}
+
     <!-- Pending Orders Notification -->
     {#if pendingCount > 0}
       <a href="/dashboard/umkm/history" class="alert-warning mb-4 block cursor-pointer hover:opacity-90 transition-opacity">
