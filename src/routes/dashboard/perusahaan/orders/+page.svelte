@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { onDestroy } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getOrdersAsPerusahaan, updateOrder, createTransaction, getTransactionsByOrderIds } from '$lib/supabase.js';
+  import { getProfile, getOrdersAsPerusahaan, updateOrder, createTransaction, getTransactionsByOrderIds, getPaymentConfirmationsForOrder } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
   import Chat from '$lib/Chat.svelte';
@@ -17,6 +17,7 @@
   let error = $state('');
   let chatOrderId = $state(null);
   let transactionsMap = $state({}); // order_id -> transaction
+  let paidOrdersMap = $state({});   // order_id -> payment_confirmation (only confirmed/paid)
   let completePromptOrderId = $state(null);
   let completePromptError = $state('');
   let cancelConfirmOrderId = $state(null);
@@ -31,6 +32,24 @@
 
   function dismissNotification() {
     notification = null;
+  }
+
+  /** Fetch payment confirmations for given orders to know which are paid */
+  async function loadPaymentStatus(orderList) {
+    const paidIds = orderList
+      .filter(o => o.status === 'completed' || o.status === 'completed_by_perusahaan')
+      .map(o => o.id);
+    if (paidIds.length === 0) { paidOrdersMap = {}; return; }
+
+    const map = {};
+    for (const oid of paidIds) {
+      const { data } = await getPaymentConfirmationsForOrder(oid);
+      if (data) {
+        const paid = data.find(p => p.status === 'confirmed' || p.status === 'paid');
+        if (paid) map[oid] = paid;
+      }
+    }
+    paidOrdersMap = map;
   }
 
   let activeOrdersMap = $derived.by(() => {
@@ -90,6 +109,9 @@
       }
     }
 
+    // Fetch payment confirmations to know which orders are already paid
+    await loadPaymentStatus(res.data || []);
+
     loading = false;
 
     // Auto-refresh orders every 3s
@@ -97,7 +119,10 @@
       const { data: { session: s } } = await supabase.auth.getSession();
       if (!s) return;
       const { data } = await getOrdersAsPerusahaan(s.user.id);
-      if (data) orders = data;
+      if (data) {
+        orders = data;
+        await loadPaymentStatus(data);
+      }
     }, 3000);
   });
 
@@ -469,13 +494,21 @@
             </button>
 
             {#if order.status === 'completed' || order.status === 'completed_by_perusahaan'}
-              <a
-                href="/dashboard/payment?order_id={order.id}"
-                class="btn-primary btn-sm inline-flex items-center gap-1"
-              >
-                <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#credit-card"/></svg>
-                Bayar UMKM
-              </a>
+              {#if paidOrdersMap[order.id]}
+                <!-- Already paid -->
+                <span class="badge-success inline-flex items-center gap-1 btn-sm">
+                  <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#check"/></svg>
+                  Sudah Dibayar
+                </span>
+              {:else}
+                <a
+                  href="/dashboard/payment?order_id={order.id}"
+                  class="btn-primary btn-sm inline-flex items-center gap-1"
+                >
+                  <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#credit-card"/></svg>
+                  Bayar UMKM
+                </a>
+              {/if}
             {/if}
           </div>
         </div>
