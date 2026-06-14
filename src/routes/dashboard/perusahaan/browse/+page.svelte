@@ -4,13 +4,15 @@
   import { getProfile, getAvailableListings, createOrder, updateListing } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
+  import ConfirmModal from '$lib/ConfirmModal.svelte';
 
   let profile = $state(null);
   let listings = $state([]);
   let loading = $state(true);
   let actionLoading = $state(false);
   let error = $state('');
-  let viewMode = $state('map'); // 'map' or 'list'
+  let viewMode = $state('map');
+  let confirmListing = $state(null); // listing to confirm claiming for // 'map' or 'list'
 
   let markers = $derived(
     listings
@@ -43,6 +45,7 @@
     const avail = listing.available_until
       ? `Tersedia hingga ${new Date(listing.available_until).toLocaleDateString('id-ID')}`
       : '';
+    const listingId = listing.id;
 
     return `
       <div style="min-width: 180px;">
@@ -52,15 +55,22 @@
           <strong>${listing.quantity_liters}L</strong> — Rp ${price}/L
         </p>
         ${avail ? `<p style="font-size: 11px; color: #a8a29e; margin: 2px 0;">${avail}</p>` : ''}
-        <p style="font-size: 11px; color: #78716c; margin: 2px 0; font-style: italic;">
-          Klik kartu di bawah untuk mengambil pickup
-        </p>
+        <button onclick="document.getElementById('claim-${listingId}').click()"
+          style="margin-top: 6px; padding: 4px 12px; font-size: 12px; background: #D4A40D; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          Terima Pickup
+        </button>
       </div>
     `;
   }
 
-  async function claimListing(listing) {
-    if (!confirm(`Terima permintaan pickup ${listing.quantity_liters}L dari UMKM ini?`)) return;
+  function claimListing(listing) {
+    confirmListing = listing;
+  }
+
+  async function executeClaim() {
+    const listing = confirmListing;
+    confirmListing = null;
+    if (!listing) return;
 
     actionLoading = true;
     error = '';
@@ -280,3 +290,15 @@
     {/if}
   {/if}
 </div>
+
+{#if confirmListing}
+  <ConfirmModal
+    title="Terima Pickup"
+    message="Terima permintaan pickup <strong>{confirmListing.quantity_liters}L</strong> dari <strong>{confirmListing.profiles?.umkm_name || confirmListing.profiles?.full_name || 'UMKM'}</strong>?"
+    confirmText="Ya, Terima"
+    cancelText="Batal"
+    onconfirm={executeClaim}
+    oncancel={() => confirmListing = null}
+    loading={actionLoading}
+  />
+{/if}

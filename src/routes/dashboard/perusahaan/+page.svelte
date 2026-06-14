@@ -28,8 +28,22 @@
   });
 
   function statusBadge(s) {
-    const map = { 'pending':'badge-warning','confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','cancelled':'badge-danger' };
+    const map = { 'pending':'badge-warning','confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','cancelled':'badge-danger','confirmed_by_umkm':'badge-warning','picked_up_by_perusahaan':'badge-info','completed_by_perusahaan':'badge-info' };
     return map[s] || 'badge-default';
+  }
+
+  function statusLabel(s) {
+    const map = {
+      'pending': 'Menunggu',
+      'confirmed': 'Dikonfirmasi',
+      'picked_up': 'Sudah Dijemput',
+      'completed': 'Selesai',
+      'cancelled': 'Dibatalkan',
+      'confirmed_by_umkm': 'Disetujui UMKM',
+      'picked_up_by_perusahaan': 'Dijemput Perusahaan',
+      'completed_by_perusahaan': 'Diselesaikan Perusahaan'
+    };
+    return map[s] || s;
   }
 </script>
 
@@ -42,7 +56,7 @@
         <h1 class="page-title">Dashboard Perusahaan</h1>
         <p class="page-subtitle">Cari dan klaim minyak jelantah dari UMKM</p>
       </div>
-      <a href="/dashboard/perusahaan/browse" class="btn-primary">Cari Minyak</a>
+      <a href="/dashboard/perusahaan/browse" class="btn-primary btn-md">Cari Minyak</a>
     </div>
 
     <!-- Stats -->
@@ -83,7 +97,7 @@
                   {#if order.pickup_date} • Jemput: {new Date(order.pickup_date).toLocaleDateString('id-ID')}{/if}
                 </p>
               </div>
-              <span class="{statusBadge(order.status)}">{order.status}</span>
+              <span class="{statusBadge(order.status)}">{statusLabel(order.status)}</span>
             </div>
           {/each}
         </div>

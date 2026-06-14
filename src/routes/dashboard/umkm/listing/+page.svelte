@@ -21,7 +21,7 @@
   let selectedFileName = $state('');
   let latitude = $state(null);
   let longitude = $state(null);
-  let showMap = $state(false);
+  let showMap = $state(true);
   let geocoding = $state(false);
   let lastGeocodedLat = $state(null);
   let lastGeocodedLng = $state(null);
@@ -299,7 +299,7 @@
             <p class="mt-1 text-xs text-herb-700">Foto dipilih: {selectedFileName}</p>
           {:else}
             <p class="input-hint">
-              Untuk prototype, foto hanya disimpan sebagai nama file.
+              Unggah foto minyak jelantah untuk referensi.
             </p>
           {/if}
         </div>
@@ -397,7 +397,7 @@
             rows="3"
           ></textarea>
           <p class="input-hint">
-            Bagian ini menjadi versi prototype dari fitur chat diskusi harga dengan pengolah.
+            Tambahkan catatan untuk perusahaan, misalnya ketersediaan harga nego.
           </p>
         </div>
 

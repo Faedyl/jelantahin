@@ -138,24 +138,6 @@
     </div>
 
     <!-- How it works -->
-    <div class="card p-5 mb-8">
-      <h2 class="font-semibold text-earth-900 mb-3">Cara Kerja Kupon Poin</h2>
-      <div class="grid gap-4 sm:grid-cols-3 text-sm">
-        <div class="flex items-start gap-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-200 text-gold-700 font-bold font-display">1</span>
-          <p class="text-earth-700">Jual minyak jelantah Anda dan dapatkan poin dari setiap transaksi</p>
-        </div>
-        <div class="flex items-start gap-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-200 text-gold-700 font-bold font-display">2</span>
-          <p class="text-earth-700">Kumpulkan poin dan pilih hadiah yang tersedia di katalog</p>
-        </div>
-        <div class="flex items-start gap-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-200 text-gold-700 font-bold font-display">3</span>
-          <p class="text-earth-700">Tukarkan poin Anda — hadiah akan dikirim atau bisa diambil</p>
-        </div>
-      </div>
-    </div>
-
     <!-- Redemption Catalog -->
     <h2 class="text-xl font-bold font-display text-earth-900 mb-4 flex items-center gap-2">
       <svg class="icon w-5 h-5 text-gold-500"><use href="/icons.svg#package"/></svg>

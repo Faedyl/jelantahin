@@ -5,6 +5,8 @@
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
   import Chat from '$lib/Chat.svelte';
+  import PromptModal from '$lib/PromptModal.svelte';
+  import ConfirmModal from '$lib/ConfirmModal.svelte';
 
   let profile = $state(null);
   let orders = $state([]);
@@ -13,6 +15,9 @@
   let error = $state('');
   let chatOrderId = $state(null);
   let transactionsMap = $state({}); // order_id -> transaction
+  let completePromptOrderId = $state(null);
+  let completePromptError = $state('');
+  let cancelConfirmOrderId = $state(null);
 
   let activeOrdersMap = $derived.by(() => {
     const active = orders.filter(o => o.status !== 'cancelled' && o.status !== 'completed');
@@ -32,10 +37,13 @@
   });
 
   const trackingSteps = [
-    { key: 'pending', label: 'Menunggu' },
-    { key: 'confirmed', label: 'Dikonfirmasi' },
-    { key: 'picked_up', label: 'Dijemput' },
-    { key: 'completed', label: 'Selesai' }
+    { key: 'pending',               label: 'Menunggu' },
+    { key: 'confirmed_by_umkm',     label: 'Disetujui' },
+    { key: 'confirmed',             label: 'Dikonfirmasi' },
+    { key: 'picked_up_by_perusahaan', label: 'Dijemput' },
+    { key: 'picked_up',             label: 'Dikonfirmasi UMKM' },
+    { key: 'completed_by_perusahaan', label: 'Diselesaikan' },
+    { key: 'completed',             label: 'Selesai' }
   ];
 
   onMount(async () => {
@@ -71,33 +79,86 @@
     loading = false;
   });
 
-  async function updateOrderStatus(orderId, newStatus) {
+  function updateOrderStatus(orderId, newStatus) {
+    if (newStatus === 'completed_by_perusahaan') {
+      completePromptOrderId = orderId;
+      completePromptError = '';
+    } else if (newStatus === 'cancelled') {
+      cancelConfirmOrderId = orderId;
+    } else {
+      executeStatusUpdate(orderId, newStatus);
+    }
+  }
+
+  async function executeComplete(actualLitersStr) {
+    const orderId = completePromptOrderId;
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return false;
+
+    const actualLiters = parseFloat(actualLitersStr);
+
+    if (!actualLiters || actualLiters <= 0) {
+      completePromptError = 'Jumlah aktual tidak valid.';
+      return false;
+    }
+
     actionLoading = true;
     error = '';
 
-    const order = orders.find((o) => o.id === orderId);
+    const { error: orderErr } = await updateOrder(orderId, { status: 'completed_by_perusahaan' });
 
-    let actualLiters = order ? parseFloat(order.requested_liters) : 0;
+    if (orderErr) {
+      error = orderErr.message;
+      actionLoading = false;
+      completePromptOrderId = null;
+      return;
+    }
 
-    if (newStatus === 'completed') {
-      const input = prompt(
-        'Masukkan jumlah minyak jelantah yang benar-benar diterima:',
-        actualLiters
-      );
+    const pricePerLiter = parseFloat(order.oil_listings?.price_per_liter || 0);
 
-      if (input === null) {
-        actionLoading = false;
-        return;
-      }
+    const { data: txData, error: txErr } = await createTransaction({
+      order_id: orderId,
+      actual_liters: actualLiters,
+      total_price: actualLiters * pricePerLiter,
+      payment_method: 'transfer',
+      payment_status: 'paid'
+    });
 
-      actualLiters = parseFloat(input);
+    if (txErr) {
+      error = txErr.message;
+    }
 
-      if (!actualLiters || actualLiters <= 0) {
-        error = 'Jumlah aktual tidak valid.';
-        actionLoading = false;
-        return;
+    if (txData) {
+      transactionsMap = { ...transactionsMap, [orderId]: txData };
+    }
+
+    // 🏆 Auto-earn points for UMKM: 1 liter = 10 poin
+    if (!txErr) {
+      const points = Math.floor(actualLiters * 10);
+      const ptsRes = await fetch('/api/points/earn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: order.umkm_id,
+          points,
+          source: 'transaction',
+          description: `${actualLiters}L minyak jelantah — 1L = 10 poin`,
+        }),
+      });
+      const ptsData = await ptsRes.json();
+      if (!ptsRes.ok) {
+        console.error('[Points] Gagal earn:', ptsData.error);
       }
     }
+
+    orders = orders.map((o) => (o.id === orderId ? { ...o, status: 'completed_by_perusahaan' } : o));
+    actionLoading = false;
+    completePromptOrderId = null;
+  }
+
+  async function executeStatusUpdate(orderId, newStatus) {
+    actionLoading = true;
+    error = '';
 
     const { error: orderErr } = await updateOrder(orderId, { status: newStatus });
 
@@ -107,48 +168,15 @@
       return;
     }
 
-    if (newStatus === 'completed' && order) {
-      const pricePerLiter = parseFloat(order.oil_listings?.price_per_liter || 0);
-
-      const { data: txData, error: txErr } = await createTransaction({
-        order_id: orderId,
-        actual_liters: actualLiters,
-        total_price: actualLiters * pricePerLiter,
-        payment_method: 'transfer',
-        payment_status: 'paid'
-      });
-
-      if (txErr) {
-        error = txErr.message;
-      }
-
-      // Update local transactions map so announcement shows immediately
-      if (txData) {
-        transactionsMap = { ...transactionsMap, [orderId]: txData };
-      }
-
-      // 🏆 Auto-earn points for UMKM: 1 liter = 10 poin
-      if (!txErr) {
-        const points = Math.floor(actualLiters * 10);
-        const ptsRes = await fetch('/api/points/earn', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: order.umkm_id,
-            points,
-            source: 'transaction',
-            description: `${actualLiters}L minyak jelantah — 1L = 10 poin`,
-          }),
-        });
-        const ptsData = await ptsRes.json();
-        if (!ptsRes.ok) {
-          console.error('[Points] Gagal earn:', ptsData.error);
-        }
-      }
-    }
-
     orders = orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o));
     actionLoading = false;
+  }
+
+  async function executeCancel() {
+    const orderId = cancelConfirmOrderId;
+    cancelConfirmOrderId = null;
+    if (!orderId) return;
+    await executeStatusUpdate(orderId, 'cancelled');
   }
 
   function statusBadge(s) {
@@ -157,7 +185,10 @@
       confirmed: 'badge-info',
       picked_up: 'badge-success',
       completed: 'badge-success',
-      cancelled: 'badge-danger'
+      cancelled: 'badge-danger',
+      confirmed_by_umkm: 'badge-warning',
+      picked_up_by_perusahaan: 'badge-info',
+      completed_by_perusahaan: 'badge-info'
     };
 
     return map[s] || 'badge-default';
@@ -169,26 +200,37 @@
       confirmed: 'Pickup dikonfirmasi',
       picked_up: 'Minyak sudah dijemput',
       completed: 'Selesai',
-      cancelled: 'Dibatalkan'
+      cancelled: 'Dibatalkan',
+      confirmed_by_umkm: 'Disetujui UMKM',
+      picked_up_by_perusahaan: 'Dijemput Perusahaan',
+      completed_by_perusahaan: 'Diselesaikan Perusahaan'
     };
 
     return map[s] || s;
   }
 
   function nextActions(status) {
-    if (status === 'pending') {
+    if (status === 'confirmed_by_umkm') {
       return [{ label: 'Konfirmasi Pickup', status: 'confirmed', cls: 'btn-primary' }];
     }
 
     if (status === 'confirmed') {
-      return [{ label: 'Sudah Dijemput', status: 'picked_up', cls: 'btn-primary' }];
+      return [{ label: 'Sudah Dijemput', status: 'picked_up_by_perusahaan', cls: 'btn-primary' }];
+    }
+
+    if (status === 'picked_up_by_perusahaan') {
+      return [
+        { label: 'Konfirmasi Penjemputan', status: 'picked_up', cls: 'btn-primary' },
+        { label: 'Batalkan', status: 'cancelled', cls: 'btn-danger' }
+      ];
     }
 
     if (status === 'picked_up') {
-      return [
-        { label: 'Verifikasi & Selesaikan', status: 'completed', cls: 'btn-primary' },
-        { label: 'Batalkan', status: 'cancelled', cls: 'btn-danger' }
-      ];
+      return [{ label: 'Verifikasi & Selesaikan', status: 'completed_by_perusahaan', cls: 'btn-primary' }];
+    }
+
+    if (status === 'completed_by_perusahaan') {
+      return [{ label: 'Selesaikan', status: 'completed', cls: 'btn-primary' }];
     }
 
     return [];
@@ -315,7 +357,7 @@
           {/if}
 
           <!-- Payment announcement badge for completed orders -->
-          {#if order.status === 'completed' && transactionsMap[order.id]}
+          {#if (order.status === 'completed' || order.status === 'completed_by_perusahaan') && transactionsMap[order.id]}
             {@const tx = transactionsMap[order.id]}
             <div class="mb-4 flex justify-center">
               <div class="alert-success w-full">
@@ -392,7 +434,7 @@
               Chat
             </button>
 
-            {#if order.status === 'completed'}
+            {#if order.status === 'completed' || order.status === 'completed_by_perusahaan'}
               <a
                 href="/dashboard/payment?order_id={order.id}"
                 class="btn-primary btn-sm inline-flex items-center gap-1"
@@ -415,5 +457,33 @@
     currentUserName={profile.company_name || profile.full_name}
     orderStatus={orders.find((o) => o.id === chatOrderId)?.status}
     onclose={() => (chatOrderId = null)}
+  />
+{/if}
+
+{#if completePromptOrderId}
+  {@const order = orders.find((o) => o.id === completePromptOrderId)}
+  <PromptModal
+    title="Verifikasi & Selesaikan"
+    message="Masukkan jumlah minyak jelantah yang benar-benar diterima:"
+    label="Jumlah Aktual (Liter)"
+    placeholder={String(order?.requested_liters || '')}
+    defaultValue={String(order?.requested_liters || '')}
+    confirmText="Selesaikan"
+    error={completePromptError}
+    onconfirm={(val) => executeComplete(val)}
+    oncancel={() => completePromptOrderId = null}
+  />
+{/if}
+
+{#if cancelConfirmOrderId}
+  <ConfirmModal
+    title="Batalkan Pesanan"
+    message="Batalkan pesanan pickup ini? Tindakan ini tidak dapat dibatalkan."
+    confirmText="Ya, Batalkan"
+    cancelText="Tidak"
+    variant="danger"
+    onconfirm={executeCancel}
+    oncancel={() => cancelConfirmOrderId = null}
+    loading={actionLoading}
   />
 {/if}

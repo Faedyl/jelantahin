@@ -2,11 +2,13 @@
   import '../app.css';
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
+  import { getProfile } from '$lib/supabase.js';
   import { goto, onNavigate } from '$app/navigation';
 
   let { children } = $props();
 
   let session = $state(null);
+  let userRole = $state(null);
   let loading = $state(true);
   let sidebarOpen = $state(false);
 
@@ -20,13 +22,23 @@
   });
 
   onMount(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       session = s;
+      if (s) {
+        const { data: profile } = await getProfile(s.user.id);
+        userRole = profile?.role || null;
+      }
       loading = false;
     });
 
-    supabase.auth.onAuthStateChange((_event, s) => {
+    supabase.auth.onAuthStateChange(async (_event, s) => {
       session = s;
+      if (s) {
+        const { data: profile } = await getProfile(s.user.id);
+        userRole = profile?.role || null;
+      } else {
+        userRole = null;
+      }
     });
   });
 
@@ -90,12 +102,14 @@
         {#if session}
           <a href="/dashboard" class="nav-link">
             <svg class="icon w-4 h-4"><use href="/icons.svg#trending-up"/></svg>
-            Dashboard
+            Beranda
           </a>
+          {#if userRole === 'perusahaan'}
           <a href="/dashboard/payment" class="nav-link">
             <svg class="icon w-4 h-4"><use href="/icons.svg#credit-card"/></svg>
             Bayar
           </a>
+          {/if}
         {:else}
           <a href="/" class="nav-link">Beranda</a>
         {/if}
@@ -174,12 +188,14 @@
         {#if session}
           <a href="/dashboard" class="nav-link w-full" onclick={closeSidebar}>
             <svg class="icon w-4 h-4"><use href="/icons.svg#trending-up"/></svg>
-            Dashboard
+            Beranda
           </a>
+          {#if userRole === 'perusahaan'}
           <a href="/dashboard/payment" class="nav-link w-full" onclick={closeSidebar}>
             <svg class="icon w-4 h-4"><use href="/icons.svg#credit-card"/></svg>
             Pembayaran
           </a>
+          {/if}
           <hr class="divider my-3" />
           <a href="/logout" class="nav-link w-full text-danger" onclick={closeSidebar}>
             <svg class="icon w-4 h-4"><use href="/icons.svg#log-out"/></svg>

@@ -398,6 +398,32 @@ export async function getPaymentsForUmkm(userId) {
 }
 
 export async function confirmOrderPayment({ orderId, userId, bankId, amount, senderName, adminFee }) {
+  // Verify caller owns this order (only the assigned Perusahaan can pay)
+  const { data: order } = await supabase
+    .from("orders")
+    .select("perusahaan_id")
+    .eq("id", orderId)
+    .single();
+
+  if (!order) {
+    return { error: { message: "Pesanan tidak ditemukan." } };
+  }
+  if (order.perusahaan_id !== userId) {
+    return { error: { message: "Anda tidak berhak melakukan pembayaran untuk pesanan ini." } };
+  }
+
+  // Prevent double payment: check if already paid (align with DB unique index:
+  // any non-rejected payment blocks a new one)
+  const { data: existingPayments } = await supabase
+    .from("payment_confirmations")
+    .select("id, status")
+    .eq("order_id", orderId)
+    .neq("status", "rejected");
+
+  if (existingPayments && existingPayments.length > 0) {
+    return { error: { message: "Pembayaran untuk pesanan ini sudah dilakukan." } };
+  }
+
   return supabase
     .from("payment_confirmations")
     .insert([{

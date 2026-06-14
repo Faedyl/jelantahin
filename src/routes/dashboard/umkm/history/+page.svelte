@@ -1,10 +1,11 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient.js';
-  import { getProfile, getMyListings, getOrdersAsUmkm, getPaymentsForUmkm, getPointsBalance, ensurePointsAccount, getTransactionsByOrderIds } from '$lib/supabase.js';
+  import { getProfile, getMyListings, getOrdersAsUmkm, getPaymentsForUmkm, getPointsBalance, ensurePointsAccount, getTransactionsByOrderIds, updateOrder } from '$lib/supabase.js';
   import { goto } from '$app/navigation';
   import Map from '$lib/Map.svelte';
   import Chat from '$lib/Chat.svelte';
+  import ConfirmModal from '$lib/ConfirmModal.svelte';
 
   let profile = $state(null);
   let listings = $state([]);
@@ -17,8 +18,8 @@
   let pointsBalance = $state(0);
   let incomingPayments = $state([]);
   let totalReceived = $state(0);
-  let showRewardModal = $state(false);
-  let rewardMessage = $state('');
+  let rejectConfirmOrderId = $state(null);
+  let actionLoading = $state(false);
 
   function setTab(value) {
     tab = value;
@@ -54,37 +55,14 @@
     }, 0)
   );
 
-  let rewardPoints = $derived(totalLiters * 10);
-
-  const rewardOptions = [
-    {
-      id: 1,
-      title: 'Voucher Diskon Pickup',
-      description: 'Potongan biaya layanan pickup untuk transaksi berikutnya.',
-      points: 100,
-      type: 'voucher'
-    },
-    {
-      id: 2,
-      title: 'Voucher UMKM Partner',
-      description: 'Voucher belanja untuk kebutuhan usaha UMKM.',
-      points: 150,
-      type: 'voucher'
-    },
-    {
-      id: 3,
-      title: 'Sertifikat Kontribusi Lingkungan',
-      description: 'Sertifikat digital sebagai bukti kontribusi pengurangan limbah minyak.',
-      points: 50,
-      type: 'certificate'
-    }
-  ];
-
   const trackingSteps = [
-    { key: 'pending', label: 'Menunggu' },
-    { key: 'confirmed', label: 'Dikonfirmasi' },
-    { key: 'picked_up', label: 'Dijemput' },
-    { key: 'completed', label: 'Selesai' }
+    { key: 'pending',               label: 'Menunggu' },
+    { key: 'confirmed_by_umkm',     label: 'Disetujui' },
+    { key: 'confirmed',             label: 'Dikonfirmasi' },
+    { key: 'picked_up_by_perusahaan', label: 'Dijemput' },
+    { key: 'picked_up',             label: 'Dikonfirmasi UMKM' },
+    { key: 'completed_by_perusahaan', label: 'Diselesaikan' },
+    { key: 'completed',             label: 'Selesai' }
   ];
 
   onMount(async () => {
@@ -152,7 +130,10 @@
       cancelled: 'badge-danger',
       pending: 'badge-warning',
       confirmed: 'badge-info',
-      picked_up: 'badge-success'
+      picked_up: 'badge-success',
+      confirmed_by_umkm: 'badge-warning',
+      picked_up_by_perusahaan: 'badge-info',
+      completed_by_perusahaan: 'badge-info'
     };
 
     return map[status] || 'badge-default';
@@ -166,7 +147,10 @@
       confirmed: 'Dikonfirmasi',
       picked_up: 'Sudah Dijemput',
       completed: 'Selesai',
-      cancelled: 'Dibatalkan'
+      cancelled: 'Dibatalkan',
+      confirmed_by_umkm: 'Disetujui UMKM',
+      picked_up_by_perusahaan: 'Dijemput Perusahaan',
+      completed_by_perusahaan: 'Diselesaikan Perusahaan'
     };
 
     return map[status] || status;
@@ -177,23 +161,48 @@
     return trackingSteps.findIndex((step) => step.key === status);
   }
 
-  function openRewardModal() {
-    rewardMessage = '';
-    showRewardModal = true;
-  }
-
-  function closeRewardModal() {
-    showRewardModal = false;
-    rewardMessage = '';
-  }
-
-  function redeemReward(reward) {
-    if (pointsBalance < reward.points) {
-      rewardMessage = `Poin belum cukup untuk menukar ${reward.title}. Dibutuhkan ${reward.points} poin.`;
-      return;
+  async function acceptOrder(orderId) {
+    actionLoading = true;
+    const { error } = await updateOrder(orderId, { status: 'confirmed_by_umkm' });
+    actionLoading = false;
+    if (!error) {
+      orders = orders.map(o => o.id === orderId ? { ...o, status: 'confirmed_by_umkm' } : o);
     }
+  }
 
-    rewardMessage = `${reward.title} berhasil ditukar! Untuk prototype, data penukaran belum disimpan ke database.`;
+  async function confirmPickup(orderId) {
+    actionLoading = true;
+    const { error } = await updateOrder(orderId, { status: 'picked_up' });
+    actionLoading = false;
+    if (!error) {
+      orders = orders.map(o => o.id === orderId ? { ...o, status: 'picked_up' } : o);
+    }
+  }
+
+  async function confirmCompleted(orderId) {
+    actionLoading = true;
+    const { error } = await updateOrder(orderId, { status: 'completed' });
+    actionLoading = false;
+    if (!error) {
+      orders = orders.map(o => o.id === orderId ? { ...o, status: 'completed' } : o);
+    }
+  }
+
+  async function rejectOrder(orderId) {
+    rejectConfirmOrderId = orderId;
+  }
+
+  function confirmReject() {
+    const orderId = rejectConfirmOrderId;
+    rejectConfirmOrderId = null;
+    if (!orderId) return;
+    actionLoading = true;
+    updateOrder(orderId, { status: 'cancelled' }).then(({ error }) => {
+      actionLoading = false;
+      if (!error) {
+        orders = orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o);
+      }
+    });
   }
 </script>
 
@@ -206,7 +215,7 @@
     <span>Kembali ke Dashboard</span>
   </a>
 
-  <h1 class="page-title mb-6">Riwayat & Listing</h1>
+  <h1 class="page-title mb-6">Riwayat & Penawaran</h1>
 
   <div class="mb-6 grid gap-3 sm:grid-cols-3">
     <div class="stat">
@@ -258,7 +267,7 @@
     <button onclick={() => setTab('listings')}
       class="btn-ghost btn-sm {tab === 'listings' ? 'nav-link-active' : ''}">
       <svg class="icon w-4 h-4"><use href="/icons.svg#menu"/></svg>
-      Listing
+      Penawaran
     </button>
     <button onclick={() => setTab('orders')}
       class="btn-ghost btn-sm {tab === 'orders' ? 'nav-link-active' : ''}">
@@ -286,7 +295,7 @@
 
     <div class="card p-5">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="font-semibold text-earth-900">Semua Listing ({listings.length})</h2>
+        <h2 class="font-semibold text-earth-900">Semua Penawaran ({listings.length})</h2>
         <a href="/dashboard/umkm/listing" class="btn-primary btn-sm">
           <svg class="icon w-3 h-3"><use href="/icons.svg#package"/></svg>
           Baru
@@ -296,8 +305,8 @@
       {#if listings.length === 0}
         <div class="empty-state py-8">
           <svg class="empty-state-icon"><use href="/icons.svg#package"/></svg>
-          <p class="empty-state-title">Belum ada listing</p>
-          <p class="empty-state-desc">Buat listing baru untuk menjual jelantah.</p>
+          <p class="empty-state-title">Belum ada penawaran</p>
+          <p class="empty-state-desc">Buat penawaran baru untuk menjual jelantah.</p>
         </div>
       {:else}
         <div class="divide-y divide-earth-300/50">
@@ -332,7 +341,7 @@
         <div class="empty-state py-8">
           <svg class="empty-state-icon"><use href="/icons.svg#package"/></svg>
           <p class="empty-state-title">Belum ada pesanan</p>
-          <p class="empty-state-desc">Tunggu hingga ada perusahaan yang memesan listing Anda.</p>
+          <p class="empty-state-desc">Tunggu hingga ada perusahaan yang memesan penawaran Anda.</p>
         </div>
       {:else}
         <div class="divide-y divide-earth-300/50">
@@ -415,7 +424,43 @@
                 </div>
               {/if}
 
-              <div class="mt-3">
+              <div class="mt-3 flex gap-2">
+                {#if order.status === 'pending'}
+                  <button
+                    onclick={() => acceptOrder(order.id)}
+                    class="btn-primary btn-sm inline-flex items-center gap-1"
+                    disabled={actionLoading}
+                  >
+                    <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#check"/></svg>
+                    Terima
+                  </button>
+                  <button
+                    onclick={() => rejectOrder(order.id)}
+                    class="btn-danger btn-sm inline-flex items-center gap-1"
+                    disabled={actionLoading}
+                  >
+                    <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#x"/></svg>
+                    Tolak
+                  </button>
+                {:else if order.status === 'picked_up_by_perusahaan'}
+                  <button
+                    onclick={() => confirmPickup(order.id)}
+                    class="btn-primary btn-sm inline-flex items-center gap-1"
+                    disabled={actionLoading}
+                  >
+                    <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#check"/></svg>
+                    Konfirmasi Penjemputan
+                  </button>
+                {:else if order.status === 'completed_by_perusahaan'}
+                  <button
+                    onclick={() => confirmCompleted(order.id)}
+                    class="btn-primary btn-sm inline-flex items-center gap-1"
+                    disabled={actionLoading}
+                  >
+                    <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#check"/></svg>
+                    Konfirmasi Selesai
+                  </button>
+                {/if}
                 <button
                   onclick={() => (chatOrderId = order.id)}
                   class="btn-secondary btn-sm inline-flex items-center gap-1"
@@ -478,90 +523,6 @@
   {/if}
 </div>
 
-{#if showRewardModal}
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-    <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-brand-lg animate-scale-in">
-      <div class="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <p class="text-sm font-semibold text-gold-600">Reward Jelantahin</p>
-          <h2 class="text-xl font-bold text-earth-900">Tukar Poin Reward</h2>
-          <p class="mt-1 text-sm text-earth-600">
-            Kamu memiliki
-            <span class="font-semibold text-gold-600">{pointsBalance.toLocaleString('id-ID')} poin</span>.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onclick={closeRewardModal}
-          class="btn-ghost btn-sm"
-        >
-          <svg class="icon w-4 h-4"><use href="/icons.svg#x"/></svg>
-        </button>
-      </div>
-
-      {#if rewardMessage}
-        <div
-          class="mb-4 rounded-lg p-3 text-sm {rewardMessage.includes('berhasil')
-            ? 'alert-success'
-            : 'alert-warning'}"
-        >
-          <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0">
-            <use href="/icons.svg#{rewardMessage.includes('berhasil') ? 'check' : 'alert-circle'}"/>
-          </svg>
-          <span>{rewardMessage}</span>
-        </div>
-      {/if}
-
-      <div class="grid gap-3">
-        {#each rewardOptions as reward}
-          <div class="card-hover p-4">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div class="flex flex-wrap items-center gap-2">
-                  <h3 class="font-semibold text-earth-800">{reward.title}</h3>
-
-                  {#if reward.type === 'certificate'}
-                    <span class="badge-success">Sertifikat</span>
-                  {:else}
-                    <span class="badge-warning">Voucher</span>
-                  {/if}
-                </div>
-
-                <p class="mt-1 text-sm text-earth-600">{reward.description}</p>
-                <p class="mt-2 text-xs font-semibold text-earth-700">
-                  Butuh {reward.points} poin
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onclick={() => redeemReward(reward)}
-                class="btn-sm {pointsBalance >= reward.points ? 'btn-primary' : 'btn-secondary'} "
-              >
-                {pointsBalance >= reward.points ? 'Tukar' : 'Poin Kurang'}
-              </button>
-            </div>
-          </div>
-        {/each}
-      </div>
-
-      <div class="divider"></div>
-      <div class="alert-info">
-        <svg class="icon w-4 h-4 mt-0.5 flex-shrink-0"><use href="/icons.svg#info"/></svg>
-        <div>
-          <p class="font-semibold text-gold-700">Catatan Prototype</p>
-          <p class="mt-1">
-            Pada versi prototype, penukaran reward belum disimpan ke database. Fitur ini
-            dibuat untuk menunjukkan alur bahwa poin dari penyaluran minyak jelantah dapat
-            ditukar menjadi voucher atau sertifikat kontribusi lingkungan.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-{/if}
-
 {#if chatOrderId && profile}
   <Chat
     orderId={chatOrderId}
@@ -569,5 +530,18 @@
     currentUserName={profile.umkm_name || profile.full_name}
     orderStatus={orders.find((o) => o.id === chatOrderId)?.status}
     onclose={() => (chatOrderId = null)}
+  />
+{/if}
+
+{#if rejectConfirmOrderId}
+  <ConfirmModal
+    title="Batalkan Pesanan"
+    message="Batalkan pesanan ini? Tindakan ini tidak dapat dibatalkan."
+    confirmText="Ya, Batalkan"
+    cancelText="Tidak"
+    variant="danger"
+    onconfirm={confirmReject}
+    oncancel={() => rejectConfirmOrderId = null}
+    loading={actionLoading}
   />
 {/if}

@@ -55,9 +55,26 @@
   function statusBadge(s) {
     const map = {
       'available':'badge-success','claimed':'badge-info','pending':'badge-warning',
-      'confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','cancelled':'badge-danger'
+      'confirmed':'badge-info','picked_up':'badge-success','completed':'badge-success','cancelled':'badge-danger',
+      'confirmed_by_umkm':'badge-warning','picked_up_by_perusahaan':'badge-info','completed_by_perusahaan':'badge-info'
     };
     return map[s] || 'badge-default';
+  }
+
+  function statusLabel(s) {
+    const map = {
+      'available': 'Tersedia',
+      'claimed': 'Diklaim',
+      'pending': 'Menunggu',
+      'confirmed': 'Dikonfirmasi',
+      'picked_up': 'Sudah Dijemput',
+      'completed': 'Selesai',
+      'cancelled': 'Dibatalkan',
+      'confirmed_by_umkm': 'Disetujui UMKM',
+      'picked_up_by_perusahaan': 'Dijemput Perusahaan',
+      'completed_by_perusahaan': 'Diselesaikan Perusahaan'
+    };
+    return map[s] || s;
   }
 
   function formatRupiah(v) {
@@ -107,7 +124,7 @@
       <!-- Stats -->
       <div class="grid gap-4 sm:grid-cols-4 mb-8">
         <div class="stat">
-          <p class="stat-label">Total Listing</p>
+          <p class="stat-label">Total Penawaran</p>
           <p class="stat-value">{umkmStats.listings}</p>
         </div>
         <div class="stat">
@@ -179,7 +196,7 @@
                       {new Date(order.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short' })}
                     </p>
                   </div>
-                  <span class="{statusBadge(order.status)} text-xs">{order.status}</span>
+                  <span class="{statusBadge(order.status)} text-xs">{statusLabel(order.status)}</span>
                 </div>
               {/each}
             </div>
@@ -189,7 +206,7 @@
         <!-- Recent listings -->
         <div class="card p-5 lg:col-span-3">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="font-semibold text-earth-900 font-display">Listing Terbaru</h2>
+            <h2 class="font-semibold text-earth-900 font-display">Penawaran Terbaru</h2>
             <a href="/dashboard/umkm/history" class="text-xs font-medium text-gold-600 hover:text-gold-700 transition-colors inline-flex items-center gap-1">
               Lihat semua
               <svg class="icon w-3 h-3"><use href="/icons.svg#arrow-right"/></svg>
@@ -198,7 +215,7 @@
           {#if recentListings.length === 0}
             <div class="empty-state py-8">
               <svg class="w-10 h-10 text-earth-400 mb-3"><use href="/icons.svg#package"/></svg>
-              <p class="text-sm text-earth-500">Belum ada listing. Mulai dengan ajukan pickup baru.</p>
+              <p class="text-sm text-earth-500">Belum ada penawaran. Mulai dengan ajukan pickup baru.</p>
             </div>
           {:else}
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -207,7 +224,7 @@
                   <p class="font-semibold text-earth-900 font-display">{listing.quantity_liters}L</p>
                   <p class="text-xs text-gold-600 font-medium">{formatRupiah(listing.price_per_liter)}/L</p>
                   <p class="text-xs text-earth-500 truncate mt-1">{listing.city || listing.pickup_address?.slice(0, 25)}</p>
-                  <span class="{statusBadge(listing.status)} text-xs mt-2 inline-block">{listing.status}</span>
+                  <span class="{statusBadge(listing.status)} text-xs mt-2 inline-block">{statusLabel(listing.status)}</span>
                 </div>
               {/each}
             </div>
@@ -250,10 +267,6 @@
               <svg class="icon w-4 h-4"><use href="/icons.svg#credit-card"/></svg>
               Pembayaran
             </a>
-            <a href="/dashboard/perusahaan/fee" class="btn-secondary w-full btn-sm justify-start">
-              <svg class="icon w-4 h-4"><use href="/icons.svg#trending-up"/></svg>
-              Biaya Admin
-            </a>
           </div>
         </div>
 
@@ -286,7 +299,7 @@
                       {#if order.pickup_date} • Jemput: {new Date(order.pickup_date).toLocaleDateString('id-ID', { day:'numeric', month:'short' })}{/if}
                     </p>
                   </div>
-                  <span class="{statusBadge(order.status)} text-xs">{order.status}</span>
+                  <span class="{statusBadge(order.status)} text-xs">{statusLabel(order.status)}</span>
                 </div>
               {/each}
             </div>

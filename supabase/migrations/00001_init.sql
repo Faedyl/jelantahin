@@ -68,7 +68,7 @@ create table public.orders (
   umkm_id         uuid        not null references public.profiles(id) on delete cascade,
   requested_liters numeric(8,2) not null check (requested_liters > 0),
   status          text        not null default 'pending'
-                              check (status in ('pending','confirmed','picked_up','completed','cancelled')),
+                              check (status in ('pending','confirmed_by_umkm','confirmed','picked_up_by_perusahaan','picked_up','completed_by_perusahaan','completed','cancelled')),
   pickup_date     date,
   notes           text,
   created_at      timestamptz not null default now(),
