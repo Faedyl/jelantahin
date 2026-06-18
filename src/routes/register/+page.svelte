@@ -32,11 +32,22 @@
 
     loading = true;
 
+    // Build common metadata — these get stored in raw_user_meta_data
+    // so the DB trigger handle_new_user() can save them to profiles
+    const metadata = {
+      role,
+      full_name: fullName,
+      phone,
+      address,
+      umkm_name: umkmName || '',
+      company_name: companyName || '',
+    };
+
     if (DEV_BYPASS_EMAIL) {
       const res = await fetch('/api/dev-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role, fullName })
+        body: JSON.stringify({ email, password, ...metadata })
       });
       const result = await res.json();
 
@@ -60,7 +71,7 @@
         email,
         password,
         options: {
-          data: { role, full_name: fullName }
+          data: metadata
         }
       });
 

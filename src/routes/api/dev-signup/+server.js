@@ -22,9 +22,9 @@ export async function POST({ request }) {
   }
 
   try {
-    const { email, password, role, fullName } = await request.json();
+    const { email, password, role, full_name, phone, address, umkm_name, company_name } = await request.json();
 
-    if (!email || !password || !role || !fullName) {
+    if (!email || !password || !role || !full_name) {
       return json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -39,7 +39,7 @@ export async function POST({ request }) {
       email,
       password,
       email_confirm: true,
-      user_metadata: { role, full_name: fullName }
+      user_metadata: { role, full_name, phone, address, umkm_name, company_name }
     });
 
     if (error) {

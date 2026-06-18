@@ -250,6 +250,10 @@
               <svg class="icon w-4 h-4"><use href="/icons.svg#clock-rotate"/></svg>
               Riwayat & Pembayaran
             </a>
+            <a href="/dashboard/profile" class="btn-secondary w-full btn-sm justify-start">
+              <svg class="icon w-4 h-4"><use href="/icons.svg#user"/></svg>
+              Edit Profil
+            </a>
           </div>
         </div>
 
@@ -350,6 +354,10 @@
               <svg class="icon w-4 h-4"><use href="/icons.svg#credit-card"/></svg>
               Pembayaran
             </a>
+            <a href="/dashboard/profile" class="btn-secondary w-full btn-sm justify-start">
+              <svg class="icon w-4 h-4"><use href="/icons.svg#user"/></svg>
+              Edit Profil
+            </a>
           </div>
         </div>
 
@@ -445,6 +453,12 @@
             <span>{profile.company_nib}</span>
           </div>
         {/if}
+        <div class="pt-3">
+          <a href="/dashboard/profile" class="btn-secondary w-full btn-sm justify-center">
+            <svg class="icon w-4 h-4"><use href="/icons.svg#user"/></svg>
+            Edit Profil
+          </a>
+        </div>
       </div>
     </details>
   </div>
