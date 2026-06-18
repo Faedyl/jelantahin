@@ -64,8 +64,8 @@
       } else if (oldStatus === 'picked_up_by_perusahaan' && newStatus === 'picked_up') {
         showNotification('success', 'Penjemputan Dikonfirmasi UMKM', 'UMKM mengkonfirmasi minyak telah dijemput.');
         notification.noSound = false;
-      } else if (oldStatus === 'completed_by_perusahaan' && newStatus === 'completed') {
-        showNotification('success', 'Pesanan Selesai', 'UMKM telah menyelesaikan pesanan.');
+      } else if (oldStatus === 'paid' && newStatus === 'completed') {
+        showNotification('success', 'Pesanan Selesai', 'UMKM telah mengkonfirmasi penyelesaian pesanan.');
         notification.noSound = false;
       }
     }
@@ -128,7 +128,7 @@
 
     // Fetch transactions for completed orders to show payment announcements
     const completedIds = (res.data || [])
-      .filter((o) => o.status === 'completed' || o.status === 'paid')
+      .filter((o) => o.status === 'completed_by_perusahaan' || o.status === 'completed' || o.status === 'paid')
       .map((o) => o.id);
     if (completedIds.length > 0) {
       const txRes = await getTransactionsByOrderIds(completedIds);
@@ -163,7 +163,7 @@
 
         // Refresh transactions for completed/paid orders
         const txIds = (data || [])
-          .filter((o) => o.status === 'completed' || o.status === 'paid')
+          .filter((o) => o.status === 'completed_by_perusahaan' || o.status === 'completed' || o.status === 'paid')
           .map((o) => o.id);
         if (txIds.length > 0) {
           const txRes = await getTransactionsByOrderIds(txIds);
@@ -530,8 +530,8 @@ function formatRupiah(value) {
               Chat
             </button>
 
-            {#if order.status === 'completed' || order.status === 'paid'}
-              {#if order.status === 'paid' || paidOrdersMap[order.id]}
+            {#if order.status === 'completed_by_perusahaan' || order.status === 'paid' || order.status === 'completed'}
+              {#if order.status === 'paid' || order.status === 'completed' || paidOrdersMap[order.id]}
                 <!-- Already paid -->
                 <span class="badge-success inline-flex items-center gap-1 btn-sm">
                   <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#check"/></svg>

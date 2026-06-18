@@ -60,7 +60,7 @@
     'confirmed_by_umkm': { to: 'confirmed',            type: 'success', title: 'Pickup Dikonfirmasi',          msg: 'Perusahaan telah mengkonfirmasi pickup.' },
     'confirmed':         { to: 'picked_up_by_perusahaan', type: 'success', title: 'Minyak Sedang Dijemput',         msg: 'Perusahaan sedang dalam perjalanan menjemput minyak.' },
     'picked_up':         { to: 'completed_by_perusahaan', type: 'success', title: 'Pesanan Diselesaikan Perusahaan', msg: 'Perusahaan telah menyelesaikan pesanan. Konfirmasi sekarang.' },
-    'completed':         { to: 'paid',                    type: 'success', title: 'Pembayaran Diterima',            msg: 'Perusahaan telah melakukan pembayaran.' },
+    'completed_by_perusahaan': { to: 'paid',                    type: 'success', title: 'Pembayaran Diterima',            msg: 'Perusahaan telah melakukan pembayaran. Konfirmasi sekarang untuk menyelesaikan.' },
     'picked_up_by_perusahaan': { to: 'cancelled',      type: 'error',   title: 'Pesanan Dibatalkan',           msg: 'Perusahaan membatalkan pesanan.' },
   };
 
@@ -568,7 +568,7 @@
                     <svg class="icon w-3.5 h-3.5"><use href="/icons.svg#check"/></svg>
                     Konfirmasi Penjemputan
                   </button>
-                {:else if order.status === 'completed_by_perusahaan'}
+                {:else if order.status === 'paid'}
                   <button
                     onclick={() => confirmCompleted(order.id)}
                     class="btn-primary btn-sm inline-flex items-center gap-1"

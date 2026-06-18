@@ -35,9 +35,9 @@
       'confirmed': 1,
       'picked_up_by_perusahaan': 1,
       'picked_up': 1,
-      'completed_by_perusahaan': 2,
-      'completed': 2,
-      'paid': 3,
+      'completed_by_perusahaan': 1,
+      'paid': 2,
+      'completed': 3,
     };
     const idx = STATUS_TO_PHASE[status];
     if (isPaid && idx < 3) return 3;

@@ -50,8 +50,8 @@
       order = orderData;
 
       if (orderData) {
-        // Only allow payment when order is 'completed' (UMKM has confirmed)
-        if (orderData.status !== 'completed') {
+        // Only allow payment when order is 'completed_by_perusahaan' (Perusahaan has entered liters)
+        if (orderData.status !== 'completed_by_perusahaan') {
           goto('/dashboard/perusahaan/orders');
           return;
         }

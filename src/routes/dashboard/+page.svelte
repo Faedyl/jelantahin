@@ -35,14 +35,14 @@
   const umkmToPerusahaan = [
     { from: 'pending', to: 'confirmed_by_umkm',     type: 'success', title: 'Pesanan Diterima UMKM',         msg: 'UMKM telah menerima pesanan pickup.' },
     { from: 'picked_up_by_perusahaan', to: 'picked_up',           type: 'success', title: 'Penjemputan Dikonfirmasi UMKM', msg: 'UMKM mengkonfirmasi minyak telah dijemput.' },
-    { from: 'completed_by_perusahaan', to: 'completed',           type: 'success', title: 'Pesanan Selesai',               msg: 'UMKM telah menyelesaikan pesanan.' },
+    { from: 'paid', to: 'completed',                      type: 'success', title: 'Pesanan Selesai',               msg: 'UMKM telah mengkonfirmasi penyelesaian pesanan.' },
     { from: 'pending', to: 'cancelled',              type: 'error',   title: 'Pesanan Dibatalkan UMKM',       msg: 'UMKM membatalkan pesanan.' },
   ];
   const perusahaanToUmkm = [
     { from: 'confirmed_by_umkm', to: 'confirmed',               type: 'success', title: 'Pickup Dikonfirmasi',            msg: 'Perusahaan telah mengkonfirmasi pickup.' },
     { from: 'confirmed',         to: 'picked_up_by_perusahaan',  type: 'success', title: 'Minyak Sedang Dijemput',        msg: 'Perusahaan sedang dalam perjalanan menjemput minyak.' },
     { from: 'picked_up',         to: 'completed_by_perusahaan',  type: 'success', title: 'Pesanan Diselesaikan Perusahaan', msg: 'Perusahaan telah menyelesaikan pesanan. Konfirmasi sekarang.' },
-    { from: 'completed',         to: 'paid',                      type: 'success', title: 'Pembayaran Diterima',            msg: 'Perusahaan telah melakukan pembayaran.' },
+    { from: 'completed_by_perusahaan', to: 'paid',               type: 'success', title: 'Pembayaran Diterima',            msg: 'Perusahaan telah melakukan pembayaran. Konfirmasi sekarang untuk menyelesaikan.' },
     { from: 'picked_up_by_perusahaan', to: 'cancelled',          type: 'error',   title: 'Pesanan Dibatalkan',            msg: 'Perusahaan membatalkan pesanan.' },
   ];
 
